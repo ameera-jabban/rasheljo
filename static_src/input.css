@@ -1,0 +1,133 @@
+/* Tailwind v4 input for the Django-templates storefront.
+ *
+ * The @theme block below is a VERBATIM port of frontend/src/index.css — same
+ * tokens, same values. Compiled with the standalone Tailwind CLI:
+ *
+ *   ./tools/tailwindcss.exe -i static_src/input.css \
+ *       -o storefront/static/storefront/css/app.css --minify
+ *
+ * (see README → "Django-templates frontend"). Do NOT hand-edit the compiled file.
+ */
+@import "tailwindcss";
+
+/* Scan the Django templates for class names (the .py helpers rarely hold any,
+ * but include them so dynamically-built class strings are picked up too). */
+@source "../storefront/templates";
+@source "../storefront/templatetags";
+
+@theme {
+  /* Color tokens — from the Phase 4 design system spec */
+  --color-bg: #FBFAF8;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #F1ECE4; /* footer bottom bar / subtle section fills */
+  --color-ink: #1B1B1B;
+  --color-ink-muted: #6B6B6B;
+  --color-ink-subtle: #9A9186;           /* very low emphasis: metadata, timestamps, disabled labels */
+  --color-brand-primary: #B0472E;        /* DR.RASHEL accent */
+  --color-brand-primary-hover: #983D27;  /* darker terracotta for hover on filled CTAs */
+  --color-brand-secondary: #3E5C4E;      /* ESTELIN accent */
+  --color-brand-tint: #F6EBE7;           /* faint terracotta wash: active filter chips, subtle fills */
+  --color-sale: #C4362B;
+  --color-border: #E7E3DC;
+  --color-border-strong: #D9D2C6;        /* dividers / inputs that need a touch more definition */
+  --color-success: #2F6B3F;
+
+  --font-display: "Playfair Display Variable", "Playfair Display", ui-serif, Georgia, serif;
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Noto Kufi Arabic", ui-sans-serif, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  /* Elevation — deliberately restrained: a warm-tinted hairline and a soft lift,
+     nothing heavier. Shadows are keyed to the warm page ground, not pure black. */
+  --shadow-xs: 0 1px 2px rgba(40,28,18,0.05);
+  --shadow-sm: 0 1px 3px rgba(40,28,18,0.06), 0 1px 2px rgba(40,28,18,0.04);
+  --shadow-md: 0 6px 20px rgba(40,28,18,0.09);
+  --shadow-lg: 0 18px 44px rgba(40,28,18,0.13);
+}
+
+html {
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+html[dir="rtl"] body {
+  font-family: var(--font-arabic);
+}
+
+/* Display serif carries real typographic personality. */
+.font-display {
+  font-optical-sizing: auto;
+  letter-spacing: -0.011em;
+}
+
+html[dir="rtl"] .font-display {
+  letter-spacing: 0; /* Arabic display text must never be tracked */
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-brand-primary) 20%, transparent);
+}
+
+/* Prices always render LTR even inside RTL text blocks. */
+.price {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+}
+
+@keyframes ctl-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes cart-bump {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.35); }
+  60%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.cart-badge-bump { animation: cart-bump 0.42s ease; }
+
+/* Storefront toast (add-to-cart confirmation). */
+.toast-in { animation: toast-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* htmx: hide the indicator by default, show while a request is in flight. */
+.htmx-indicator { opacity: 0; transition: opacity 120ms ease; }
+.htmx-request .htmx-indicator, .htmx-request.htmx-indicator { opacity: 1; }
+
+/* Admin theme tokens — ported from frontend/src/index.css for a possible
+   Phase 2 Django admin rebuild; unused until then. */
+.admin-theme {
+  --admin-bg: #F6F7F9;
+  --admin-surface: #FFFFFF;
+  --admin-surface-muted: #F1F3F6;
+  --admin-border: #E3E6EA;
+  --admin-text: #16181D;
+  --admin-text-muted: #6B7280;
+  --admin-accent: #2C3E91;
+}

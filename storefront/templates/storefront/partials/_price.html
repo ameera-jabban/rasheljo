@@ -1,0 +1,11 @@
+{% load storefront %}{% comment %} Ports components/product/PriceDisplay.tsx. Params: product; size sm|md|lg. {% endcomment %}
+<div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+  <span class="price font-semibold tracking-tight {% if size == 'lg' %}text-2xl{% elif size == 'sm' %}text-sm{% else %}text-[1.0625rem]{% endif %}"
+    style="color: {% if product.is_on_sale %}var(--color-sale){% else %}var(--color-ink){% endif %}">{{ product.current_price|money }}</span>
+  {% if product.is_on_sale %}
+    <span class="price text-xs text-[var(--color-ink-subtle)] line-through">{{ product.price|money }}</span>
+    {% if product.discount_percent > 0 %}
+      <span class="rounded-full bg-[var(--color-sale)]/12 px-1.5 py-0.5 text-[10px] font-bold leading-none text-[var(--color-sale)]">&minus;{{ product.discount_percent }}%</span>
+    {% endif %}
+  {% endif %}
+</div>

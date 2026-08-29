@@ -1,0 +1,13 @@
+{% load storefront %}{% comment %}
+Diagonal corner-ribbon badge — ports components/product/Badge.tsx.
+Params: product (uses .badge_type); size ("sm" default | "lg").
+{% endcomment %}
+{% if product.badge_type %}
+{% badge_context product.badge_type size|default:"sm" as b %}
+<div class="pointer-events-none absolute top-0 z-10 overflow-hidden ltr:left-0 rtl:right-0 {{ b.wrap }}">
+  <div class="absolute -translate-x-1/2 -translate-y-1/2" style="top:{{ b.top }}px; left:{{ b.left }}px">
+    <span class="block -rotate-45 rtl:rotate-45 whitespace-nowrap text-center font-bold uppercase leading-tight text-white shadow-[0_1px_4px_rgba(0,0,0,0.28)] {{ b.band }} {{ b.font }} {{ b.tracking }} {{ b.bg }}"
+      style="text-shadow:0 1px 2px rgba(0,0,0,0.35)">{{ b.label }}</span>
+  </div>
+</div>
+{% endif %}

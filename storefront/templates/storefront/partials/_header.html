@@ -1,0 +1,77 @@
+{% load static storefront %}
+{% t 'nav.search' as search_label %}
+{% t 'nav.account' as account_label %}
+{% t 'nav.cart' as cart_label %}
+{% t 'nav.switchLanguage' as switch_label %}
+{% url 'storefront:home' as home_url %}
+{% url 'storefront:search' as search_url %}
+{% url 'storefront:brand' slug='dr-rashel' as dr_rashel_url %}
+{% url 'storefront:brand' slug='estelin' as estelin_url %}
+
+<header class="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 shadow-[var(--shadow-xs)] backdrop-blur">
+  <div class="mx-auto max-w-7xl px-4">
+    <div class="flex items-center gap-4 py-3.5 md:gap-8">
+      <a href="{{ home_url }}" class="flex shrink-0 items-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-primary)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--color-surface)]" aria-label="Dr Rashel Jo — home">
+        {% if site_settings.logo %}
+          <img src="{{ site_settings.logo.url }}" alt="Dr Rashel Jo" class="h-10 w-auto max-w-[160px] object-contain md:h-12">
+        {% else %}
+          <span class="font-display text-xl font-semibold">Dr Rashel Jo</span>
+        {% endif %}
+      </a>
+
+      <nav class="hidden items-center gap-6 md:flex">
+        <a href="{{ dr_rashel_url }}" class="text-sm tracking-wide transition-colors hover:text-[var(--color-brand-primary)] {% if dr_rashel_url in request.path %}text-[var(--color-brand-primary)]{% else %}text-[var(--color-ink)]{% endif %}">{% t 'nav.drRashel' %}</a>
+        <a href="{{ estelin_url }}" class="text-sm tracking-wide transition-colors hover:text-[var(--color-brand-primary)] {% if estelin_url in request.path %}text-[var(--color-brand-primary)]{% else %}text-[var(--color-ink)]{% endif %}">{% t 'nav.estelin' %}</a>
+      </nav>
+
+      <form action="{{ search_url }}" method="get" role="search" class="hidden md:block md:w-64 lg:w-80">
+        <div class="relative">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true" class="pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--color-ink-subtle)] ltr:left-3.5 rtl:right-3.5">
+            <circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/>
+          </svg>
+          <input type="search" name="q" value="{{ request.GET.q }}" placeholder="{{ search_label }}" aria-label="{{ search_label }}"
+            class="w-full rounded-full border border-[var(--color-border)] bg-[var(--color-bg)] py-2.5 text-sm text-[var(--color-ink)] outline-none transition-colors placeholder:text-[var(--color-ink-subtle)] hover:border-[var(--color-border-strong)] focus:border-[var(--color-brand-primary)] focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15 ltr:pl-10 ltr:pr-4 rtl:pr-10 rtl:pl-4">
+        </div>
+      </form>
+
+      <div class="ms-auto flex items-center gap-1 md:gap-2">
+        <a href="{% switch_language_url other_lang %}" hreflang="{{ other_lang }}" aria-label="{{ switch_label }}" title="{% if is_ar %}English{% else %}العربية{% endif %}"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--color-ink-muted)] transition-colors hover:bg-[var(--color-brand-tint)] hover:text-[var(--color-brand-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] active:scale-95">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.6 2.8 4 5.8 4 9s-1.4 6.2-4 9c-2.6-2.8-4-5.8-4-9s1.4-6.2 4-9Z"/>
+          </svg>
+        </a>
+
+        <a href="{% url 'storefront:account' %}" aria-label="{{ account_label }}" title="{{ account_label }}"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--color-ink-muted)] transition-colors hover:bg-[var(--color-brand-tint)] hover:text-[var(--color-brand-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] active:scale-95">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.6 3.7-5.4 7-5.4s6.2 1.8 7 5.4"/>
+          </svg>
+        </a>
+
+        <a href="{% url 'storefront:cart' %}" aria-label="{{ cart_label }}" title="{{ cart_label }}"
+          class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--color-ink-muted)] transition-colors hover:bg-[var(--color-brand-tint)] hover:text-[var(--color-brand-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] active:scale-95">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 8h12l1 12H5L6 8Z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>
+          </svg>
+          {% include "storefront/partials/_cart_badge.html" %}
+        </a>
+      </div>
+    </div>
+
+    <form action="{{ search_url }}" method="get" role="search" class="pb-3 md:hidden">
+      <div class="relative">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true" class="pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--color-ink-subtle)] ltr:left-3.5 rtl:right-3.5">
+          <circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/>
+        </svg>
+        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="{{ search_label }}" aria-label="{{ search_label }}"
+          class="w-full rounded-full border border-[var(--color-border)] bg-[var(--color-bg)] py-2.5 text-sm text-[var(--color-ink)] outline-none transition-colors placeholder:text-[var(--color-ink-subtle)] hover:border-[var(--color-border-strong)] focus:border-[var(--color-brand-primary)] focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15 ltr:pl-10 ltr:pr-4 rtl:pr-10 rtl:pl-4">
+      </div>
+    </form>
+  </div>
+
+  <nav class="flex items-center justify-center gap-8 border-t border-[var(--color-border)] bg-[var(--color-bg)] py-2 text-sm md:hidden">
+    <a href="{{ dr_rashel_url }}" class="text-sm tracking-wide transition-colors hover:text-[var(--color-brand-primary)] {% if dr_rashel_url in request.path %}text-[var(--color-brand-primary)]{% else %}text-[var(--color-ink)]{% endif %}">{% t 'nav.drRashel' %}</a>
+    <a href="{{ estelin_url }}" class="text-sm tracking-wide transition-colors hover:text-[var(--color-brand-primary)] {% if estelin_url in request.path %}text-[var(--color-brand-primary)]{% else %}text-[var(--color-ink)]{% endif %}">{% t 'nav.estelin' %}</a>
+  </nav>
+</header>

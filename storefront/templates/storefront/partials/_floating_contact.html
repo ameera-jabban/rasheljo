@@ -1,0 +1,15 @@
+{% load storefront %}
+{% comment %}Ports FloatingContactButtons.tsx — persistent WhatsApp + Instagram
+buttons pinned to the bottom corner (start side in RTL).{% endcomment %}
+<div class="fixed bottom-4 z-40 flex flex-col gap-2.5 ltr:right-4 rtl:left-4">
+  <a href="{{ site_settings.whatsapp_url|default:'https://wa.me/962790000000' }}" target="_blank" rel="noopener noreferrer"
+    aria-label="{% t 'contact.whatsapp' %}" style="background-color:#25D366"
+    class="flex h-11 w-11 items-center justify-center rounded-full text-white shadow-[var(--shadow-md)] transition-transform duration-150 hover:scale-105 active:scale-95">
+    {% include "storefront/partials/_whatsapp_icon.html" with cls="h-6 w-6" %}
+  </a>
+  <a href="{{ site_settings.instagram_url|default:'https://www.instagram.com/' }}" target="_blank" rel="noopener noreferrer"
+    aria-label="{% t 'contact.instagram' %}"
+    class="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-brand-primary)] text-white shadow-[var(--shadow-md)] transition-transform duration-150 hover:scale-105 active:scale-95">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.06 1.8.25 2.2.42.6.22 1 .48 1.4.9.43.4.7.8.9 1.4.17.4.36 1 .42 2.2.06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.06 1.2-.25 1.8-.42 2.2-.2.6-.47 1-.9 1.4-.4.43-.8.7-1.4.9-.4.17-1 .36-2.2.42-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-1.2-.06-1.8-.25-2.2-.42-.6-.2-1-.47-1.4-.9-.43-.4-.7-.8-.9-1.4-.17-.4-.36-1-.42-2.2C2.21 15.6 2.2 15.2 2.2 12s0-3.6.07-4.9c.06-1.2.25-1.8.42-2.2.2-.6.47-1 .9-1.4.4-.43.8-.7 1.4-.9.4-.17 1-.36 2.2-.42C8.4 2.21 8.8 2.2 12 2.2Zm0 1.8c-3.14 0-3.5 0-4.74.07-.9.04-1.4.2-1.72.32-.43.17-.74.37-1.06.7-.32.32-.52.63-.7 1.06-.12.32-.28.82-.32 1.72C3.4 8.5 3.4 8.86 3.4 12s0 3.5.07 4.74c.04.9.2 1.4.32 1.72.17.43.37.74.7 1.06.32.32.63.52 1.06.7.32.12.82.28 1.72.32 1.24.06 1.6.07 4.74.07s3.5 0 4.74-.07c.9-.04 1.4-.2 1.72-.32.43-.17.74-.37 1.06-.7.32-.32.52-.63.7-1.06.12-.32.28-.82.32-1.72.06-1.24.07-1.6.07-4.74s0-3.5-.07-4.74c-.04-.9-.2-1.4-.32-1.72a2.86 2.86 0 0 0-.7-1.06 2.86 2.86 0 0 0-1.06-.7c-.32-.12-.82-.28-1.72-.32C15.5 4 15.14 4 12 4Zm0 3.06A4.94 4.94 0 1 1 12 17a4.94 4.94 0 0 1 0-9.94Zm0 1.8a3.14 3.14 0 1 0 0 6.28 3.14 3.14 0 0 0 0-6.28Zm5.14-2a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0Z"/></svg>
+  </a>
+</div>

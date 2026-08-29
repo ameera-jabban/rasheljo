@@ -1,0 +1,12 @@
+{% comment %}
+Header cart-count badge. Rendered inline in the header, and also swapped
+out-of-band by htmx cart responses (include with oob=True) so the count stays
+live without a full reload. `bump` truthy right after an add plays the pulse.
+{% endcomment %}
+<span id="cart-badge"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% if cart_count %}
+    <span class="absolute -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[var(--color-brand-primary)] px-1 text-[11px] font-semibold leading-none text-white ltr:-right-0.5 rtl:-left-0.5 {% if bump %}cart-badge-bump{% endif %}">
+      {% if cart_count > 99 %}99+{% else %}{{ cart_count }}{% endif %}
+    </span>
+  {% endif %}
+</span>

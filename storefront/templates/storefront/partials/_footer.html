@@ -1,0 +1,98 @@
+{% load static storefront %}
+{% url 'storefront:shop' as shop_url %}
+
+<footer class="mt-20">
+  {# WavyDivider #}
+  <div aria-hidden="true" class="pointer-events-none -mb-px overflow-hidden leading-[0]">
+    <svg viewBox="0 0 1200 40" preserveAspectRatio="none" class="block h-6 w-full text-[var(--color-surface)] md:h-10">
+      <path fill="currentColor" d="M0 24C150 4 300 4 450 18s300 26 450 12 300-26 300-26v36H0Z"/>
+    </svg>
+  </div>
+
+  <div class="bg-[var(--color-surface)]">
+    <div class="mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-[1.4fr_1fr_1fr] lg:gap-14">
+      {# Brand + about + social #}
+      <div>
+        {% if site_settings.logo %}
+          <img src="{{ site_settings.logo.url }}" alt="{{ site_settings.site_name }}" class="mb-4 h-11 w-auto" width="160" height="44">
+        {% else %}
+          <div class="mb-4 font-display text-xl font-semibold">{{ site_settings.site_name|default:"Dr Rashel Jo" }}</div>
+        {% endif %}
+
+        <p class="max-w-xs text-sm leading-relaxed text-[var(--color-ink-muted)]">
+          {% if is_ar %}{{ site_settings.about_text_ar|default:"وجهتك الأصلية لمنتجات دكتور راشيل واستيلين في الأردن." }}{% else %}{{ site_settings.about_text_en|default:"Your authentic destination for Dr. Rashel & Estelin skincare in Jordan." }}{% endif %}
+        </p>
+
+        <div class="mt-5 flex gap-3">
+          {% if site_settings.instagram_url %}
+          <a href="{{ site_settings.instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="Instagram" style="background-color: var(--color-brand-primary)"
+            class="flex h-9 w-9 items-center justify-center rounded-full text-white shadow-[var(--shadow-sm)] transition-transform duration-150 hover:scale-105 active:scale-95">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="h-[18px] w-[18px]" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.06 1.8.25 2.2.42.6.22 1 .48 1.4.9.43.4.7.8.9 1.4.17.4.36 1 .42 2.2.06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.06 1.2-.25 1.8-.42 2.2-.22.6-.48 1-.9 1.4-.4.43-.8.7-1.4.9-.4.17-1 .36-2.2.42-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-1.2-.06-1.8-.25-2.2-.42-.6-.22-1-.48-1.4-.9-.43-.4-.7-.8-.9-1.4-.17-.4-.36-1-.42-2.2C2.21 15.6 2.2 15.2 2.2 12s0-3.6.07-4.9c.06-1.2.25-1.8.42-2.2.22-.6.48-1 .9-1.4.4-.43.8-.7 1.4-.9.4-.17 1-.36 2.2-.42C8.4 2.21 8.8 2.2 12 2.2Zm0 1.8c-3.14 0-3.5 0-4.74.07-.9.04-1.4.2-1.72.32-.43.17-.74.37-1.06.7-.32.32-.52.63-.7 1.06-.12.32-.28.82-.32 1.72C3.4 8.5 3.4 8.86 3.4 12s0 3.5.07 4.74c.04.9.2 1.4.32 1.72.17.43.37.74.7 1.06.32.32.63.52 1.06.7.32.12.82.28 1.72.32 1.24.06 1.6.07 4.74.07s3.5 0 4.74-.07c.9-.04 1.4-.2 1.72-.32.43-.17.74-.37 1.06-.7.32-.32.52-.63.7-1.06.12-.32.28-.82.32-1.72.06-1.24.07-1.6.07-4.74s0-3.5-.07-4.74c-.04-.9-.2-1.4-.32-1.72a2.86 2.86 0 0 0-.7-1.06 2.86 2.86 0 0 0-1.06-.7c-.32-.12-.82-.28-1.72-.32C15.5 4 15.14 4 12 4Zm0 3.06A4.94 4.94 0 1 1 12 17a4.94 4.94 0 0 1 0-9.94Zm0 1.8a3.14 3.14 0 1 0 0 6.28 3.14 3.14 0 0 0 0-6.28Zm5.14-2a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0Z"/></svg>
+          </a>
+          {% endif %}
+          {% if site_settings.whatsapp_url %}
+          <a href="{{ site_settings.whatsapp_url }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" style="background-color: #25D366"
+            class="flex h-9 w-9 items-center justify-center rounded-full text-white shadow-[var(--shadow-sm)] transition-transform duration-150 hover:scale-105 active:scale-95">
+            {% include "storefront/partials/_whatsapp_icon.html" with cls="h-[18px] w-[18px]" %}
+          </a>
+          {% endif %}
+          {% if site_settings.facebook_url %}
+          <a href="{{ site_settings.facebook_url }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook" style="background-color: var(--color-brand-primary)"
+            class="flex h-9 w-9 items-center justify-center rounded-full text-white shadow-[var(--shadow-sm)] transition-transform duration-150 hover:scale-105 active:scale-95">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="h-[18px] w-[18px]" aria-hidden="true"><path d="M13.5 21v-8.2h2.8l.42-3.2H13.5V7.55c0-.93.26-1.56 1.6-1.56h1.7V3.13c-.3-.04-1.3-.13-2.48-.13-2.46 0-4.14 1.5-4.14 4.25v2.35H7.4v3.2h2.28V21h3.82Z"/></svg>
+          </a>
+          {% endif %}
+          {% if site_settings.tiktok_url %}
+          <a href="{{ site_settings.tiktok_url }}" target="_blank" rel="noopener noreferrer" aria-label="TikTok" style="background-color: var(--color-brand-primary)"
+            class="flex h-9 w-9 items-center justify-center rounded-full text-white shadow-[var(--shadow-sm)] transition-transform duration-150 hover:scale-105 active:scale-95">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="h-[18px] w-[18px]" aria-hidden="true"><path d="M16.5 3c.3 2.1 1.5 3.5 3.5 3.7v2.6c-1.2.1-2.4-.2-3.5-.8v6.1c0 3.4-2.5 5.9-5.8 5.9A5.7 5.7 0 0 1 5 20.2 5.8 5.8 0 0 1 9.2 10c.4 0 .8 0 1.2.1v2.8c-.4-.1-.8-.2-1.2-.2a3 3 0 0 0-2.9 3 3 3 0 0 0 3 3c1.7 0 3-1.3 3-3V3h3.2Z"/></svg>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      {# Shop links #}
+      <nav class="text-sm">
+        <h3 class="mb-3 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-ink-subtle)]">{% t 'footer.shop' %}</h3>
+        <ul class="space-y-2">
+          <li><a href="{{ shop_url }}" class="text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-brand-primary)]">{% t 'footer.allProducts' %}</a></li>
+          <li><a href="{% url 'storefront:brand' slug='dr-rashel' %}" class="text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-brand-primary)]">DR.RASHEL</a></li>
+          <li><a href="{% url 'storefront:brand' slug='estelin' %}" class="text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-brand-primary)]">ESTELIN</a></li>
+        </ul>
+      </nav>
+
+      {# Help links #}
+      <nav class="text-sm">
+        <h3 class="mb-3 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-ink-subtle)]">{% t 'footer.help' %}</h3>
+        <ul class="space-y-2">
+          <li><a href="{% url 'storefront:policy' slug='shipping-policy' %}" class="text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-brand-primary)]">{% t 'footer.shipping' %}</a></li>
+          <li><a href="{% url 'storefront:policy' slug='return-policy' %}" class="text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-brand-primary)]">{% t 'footer.returns' %}</a></li>
+          <li><a href="{% url 'storefront:policy' slug='privacy-policy' %}" class="text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-brand-primary)]">{% t 'footer.privacy' %}</a></li>
+          <li><a href="{% url 'storefront:policy' slug='terms-conditions' %}" class="text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-brand-primary)]">{% t 'footer.terms' %}</a></li>
+          {% if site_settings.whatsapp_url %}
+          <li><a href="{{ site_settings.whatsapp_url }}" target="_blank" rel="noopener noreferrer" class="text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-brand-primary)]">{% t 'footer.contact' %}</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+
+      {% if site_settings.map_embed_url %}
+      <div class="relative h-52 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] md:col-span-3">
+        <iframe title="{% if is_ar %}موقع المتجر على الخريطة{% else %}Store location map{% endif %}" src="{{ site_settings.map_embed_url }}" class="h-full w-full" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        {% if site_settings.map_open_url %}
+        <a href="{{ site_settings.map_open_url }}" target="_blank" rel="noopener noreferrer" class="absolute top-3 rounded-[var(--radius-sm)] bg-[var(--color-surface)]/95 px-3 py-1.5 text-xs font-medium text-[var(--color-ink)] shadow-[var(--shadow-sm)] ltr:left-3 rtl:right-3">
+          {% if is_ar %}افتح في الخرائط{% else %}Open in Maps{% endif %}
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="bg-[var(--color-surface-muted)]">
+      <div class="mx-auto max-w-7xl px-4 py-4 text-center text-xs text-[var(--color-ink-muted)]">
+        {% if is_ar %}{{ site_settings.copyright_text_ar|default:"" }}{% else %}{{ site_settings.copyright_text_en|default:"" }}{% endif %}
+        {% if is_ar and not site_settings.copyright_text_ar %}الحقوق محفوظة © {% now "Y" %} {{ site_settings.site_name|default:"Dr Rashel Jo" }}. جميع الحقوق محفوظة.{% endif %}
+        {% if not is_ar and not site_settings.copyright_text_en %}Copyright © {% now "Y" %} {{ site_settings.site_name|default:"Dr Rashel Jo" }}. All rights reserved.{% endif %}
+      </div>
+    </div>
+  </div>
+</footer>
