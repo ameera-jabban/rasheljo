@@ -53,6 +53,45 @@ def get_cart(request):
     return get_or_create_cart(request)
 
 
+def existing_cart(request):
+    """The current cart if one already exists, else None (no create, no session)."""
+    from cart.models import Cart
+
+    user = getattr(request, "user", None)
+    if user is not None and user.is_authenticated:
+        return Cart.objects.filter(user=user).prefetch_related("items").first()
+    key = request.session.session_key
+    return Cart.objects.filter(session_key=key).prefetch_related("items").first() if key else None
+
+
+def cart_item_map(request):
+    """{product_id: CartItem} for the current cart — lets product cards render the
+    right add/stepper state without N queries."""
+    cart = existing_cart(request)
+    if not cart:
+        return {}
+    return {item.product_id: item for item in cart.items.all()}
+
+
+def wishlist_ids(request) -> set:
+    if not getattr(request, "user", None) or not request.user.is_authenticated:
+        return set()
+    from wishlist.models import WishlistItem
+
+    return set(WishlistItem.objects.filter(user=request.user).values_list("product_id", flat=True))
+
+
+def decorate_products(request, products):
+    """Attach ``.cart_item`` and ``.in_wishlist`` to each product so templates and
+    the {% include _product_card %} calls stay simple."""
+    cmap = cart_item_map(request)
+    wids = wishlist_ids(request)
+    for p in products:
+        p.cart_item = cmap.get(p.id)
+        p.in_wishlist = p.id in wids
+    return products
+
+
 # --- Catalog --------------------------------------------------------------
 
 def products_base():

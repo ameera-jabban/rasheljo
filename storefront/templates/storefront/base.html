@@ -23,15 +23,15 @@
 >
   {% include "storefront/partials/_header.html" %}
 
-  <main class="flex-1">
+  <main class="flex-1 overflow-x-hidden">
     {% block content %}{% endblock %}
   </main>
 
   {% include "storefront/partials/_footer.html" %}
   {% include "storefront/partials/_floating_contact.html" %}
 
-  {# --- Add-to-cart toast (Alpine-driven; htmx views fire a `toast` window event
-     via the _toast_trigger partial in an OOB swap) --- #}
+  {% comment %}Add-to-cart toast — Alpine-driven; htmx cart views fire a `toast`
+  event via the HX-Trigger response header, which htmx dispatches on <body>.{% endcomment %}
   <div class="pointer-events-none fixed inset-x-0 bottom-4 z-[60] flex justify-center px-4" aria-live="polite">
     <template x-if="toast">
       <div class="toast-in pointer-events-auto flex items-center gap-2.5 rounded-[var(--radius-md)] bg-[var(--color-ink)] px-4 py-2.5 text-sm font-medium text-white shadow-[var(--shadow-lg)]">

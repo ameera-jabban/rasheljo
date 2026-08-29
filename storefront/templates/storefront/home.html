@@ -1,0 +1,65 @@
+{% extends "storefront/base.html" %}
+{% load storefront %}
+
+{% block title %}{% if is_ar %}دكتور راشيل الأردن | منتجات العناية بالبشرة والجمال{% else %}DR.RASHEL Jordan | Premium Skincare & Beauty Products{% endif %}{% endblock %}
+{% block description %}{% if is_ar %}تسوّق منتجات دكتور راشيل و استيلين للعناية بالبشرة في الأردن — حلول للترطيب والتفتيح ومكافحة الشيخوخة والتنظيف والمزيد، مع توصيل سريع لكل المحافظات.{% else %}Shop DR.RASHEL and ESTELIN skincare in Jordan. Solutions for hydration, brightening, anti-aging, cleansing and more — with fast nationwide delivery.{% endif %}{% endblock %}
+
+{% block content %}
+{% t 'home.heroHeading' as hero_heading %}
+{% t 'home.heroSub' as hero_sub %}
+
+{# --- Hero --- #}
+<section class="relative h-[440px] w-full md:h-[560px]">
+  {% if hero and hero_src %}
+    <a href="{{ hero_link }}" class="group block h-full">
+      <div class="relative h-full w-full overflow-hidden bg-[var(--color-brand-secondary)]">
+        <video class="absolute inset-0 h-full w-full object-cover" src="{{ hero_src }}" {% if hero.poster_image %}poster="{{ hero.poster_image.url }}"{% endif %} autoplay muted loop playsinline preload="metadata" aria-hidden="true" tabindex="-1"></video>
+        <div class="absolute inset-0 flex flex-col justify-end p-6 text-start text-white md:p-10" style="background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.28) 18%, rgba(0,0,0,0) 45%)">
+          <div class="max-w-xl">
+            <h1 class="font-display text-3xl font-semibold leading-tight tracking-tight md:text-5xl" style="text-shadow: 0 1px 3px rgba(0,0,0,0.4)">{% if is_ar and hero.title_ar %}{{ hero.title_ar }}{% elif hero.title_en %}{{ hero.title_en }}{% else %}{{ hero_heading }}{% endif %}</h1>
+            {% with hsub=hero.subtitle_ar|default:hero.subtitle_en %}
+            <p class="mt-2 text-base font-medium text-white md:mt-3 md:text-lg" style="text-shadow: 0 1px 3px rgba(0,0,0,0.4)">{% if is_ar and hero.subtitle_ar %}{{ hero.subtitle_ar }}{% elif hero.subtitle_en %}{{ hero.subtitle_en }}{% else %}{{ hero_sub }}{% endif %}</p>
+            {% endwith %}
+            {% include "storefront/partials/_shop_now_cue.html" with size="md" cls="mt-5 md:mt-6" %}
+          </div>
+        </div>
+      </div>
+    </a>
+  {% else %}
+    <div class="relative flex h-full flex-col justify-end overflow-hidden bg-[var(--color-brand-secondary)] p-6 text-start text-white md:p-12">
+      <div aria-hidden="true" class="pointer-events-none absolute inset-0 opacity-70" style="background: radial-gradient(120% 90% at 15% 0%, rgba(255,255,255,0.18), transparent 60%)"></div>
+      <div class="relative max-w-xl">
+        <h1 class="font-display text-4xl font-semibold leading-tight tracking-tight md:text-6xl" style="text-shadow: 0 1px 3px rgba(0,0,0,0.4)">{% if is_ar %}دكتور راشيل و استيلين{% else %}Dr Rashel &amp; Estelin{% endif %}</h1>
+        <p class="mt-3 max-w-md font-medium text-white/90 md:text-lg" style="text-shadow: 0 1px 3px rgba(0,0,0,0.4)">{% if is_ar %}عناية أصلية بالبشرة، توصيل سريع في جميع أنحاء الأردن.{% else %}Authentic skincare, fast delivery across Jordan.{% endif %}</p>
+        <a href="{% url 'storefront:shop' %}" class="mt-6 inline-flex w-fit items-center gap-2 self-start rounded-[var(--radius-sm)] bg-white px-5 py-2.5 text-sm font-semibold text-[var(--color-ink)] shadow-[var(--shadow-md)] transition-transform duration-150 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-brand-secondary)]">
+          {% t 'home.shopNow' %}{% include "storefront/partials/_arrow_end.html" %}
+        </a>
+      </div>
+    </div>
+  {% endif %}
+</section>
+
+{# --- Trust strip --- #}
+<div class="border-y border-[var(--color-border)] bg-[var(--color-surface)]">
+  <div class="mx-auto flex max-w-7xl flex-col divide-y divide-[var(--color-border)] px-4 text-sm text-[var(--color-ink-muted)] sm:flex-row sm:divide-x sm:divide-y-0">
+    {% for label in trust_items %}
+    <div class="flex items-center justify-center gap-2 py-3 sm:flex-1 sm:py-3.5">
+      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="var(--color-brand-primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8.5 3.2 3.2L13 5"/></svg>
+      {{ label }}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{# --- Rails + banners --- #}
+{% include "storefront/partials/_product_rail.html" with title=t_hot_offers products=hot_offers view_all_qs="?badge=hot_offer" %}
+{% if section_1 %}{% include "storefront/partials/_section_video_banner.html" with video=section_1 src=section_1_src %}{% endif %}
+
+{% include "storefront/partials/_product_rail.html" with title=t_bestsellers products=bestsellers view_all_qs="?badge=bestseller" %}
+
+{% include "storefront/partials/_skin_quiz_banner.html" %}
+{% if section_2 %}{% include "storefront/partials/_section_video_banner.html" with video=section_2 src=section_2_src %}{% endif %}
+
+{% include "storefront/partials/_product_rail.html" with title=t_last_chance products=last_chance view_all_qs="?badge=last_chance" %}
+{% if section_3 %}{% include "storefront/partials/_section_video_banner.html" with video=section_3 src=section_3_src %}{% endif %}
+{% endblock %}

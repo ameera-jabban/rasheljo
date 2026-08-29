@@ -62,6 +62,16 @@ def money(amount):
 
 
 @register.filter
+def stars(avg):
+    """"★★★★☆" for an average rating — mirrors the StarRating glyph row."""
+    try:
+        filled = max(0, min(5, round(float(avg))))
+    except (TypeError, ValueError):
+        filled = 0
+    return "★" * filled + "☆" * (5 - filled)
+
+
+@register.filter
 def primary_image(product):
     """URL of a product's first image (by sort_order), or '' — mirrors
     ProductListSerializer.get_primary_image."""

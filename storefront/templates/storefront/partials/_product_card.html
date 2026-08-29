@@ -1,0 +1,51 @@
+{% load storefront %}{% comment %}
+Ports components/product/ProductCard.tsx. Param: product — a catalog.Product,
+annotated with average_rating / review_count and decorated by
+services.decorate_products() with .cart_item and .in_wishlist.
+{% endcomment %}
+{% with brand_name=product.brand|localized product_name=product|localized %}
+<div class="group relative flex h-full flex-col overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-xs)] transition-all duration-200 hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-md)]">
+  <a href="{% url 'storefront:product' slug=product.slug %}" class="relative block aspect-square overflow-hidden bg-[var(--color-surface)]">
+    {% include "storefront/partials/_badge.html" with product=product size="sm" %}
+    {% if not product.in_stock %}
+      <span class="absolute bottom-3 z-10 rounded-full bg-[var(--color-ink)]/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white ltr:left-3 rtl:right-3">{% t 'product.outOfStock' %}</span>
+    {% endif %}
+    {% with img=product|primary_image %}
+    {% if img %}
+      <img src="{{ img }}" alt="{{ product_name }}" width="400" height="400" loading="lazy" decoding="async"
+        class="h-full w-full object-contain p-5 transition-transform duration-300 group-hover:scale-[1.04] {% if not product.in_stock %}opacity-55 grayscale{% endif %}">
+    {% else %}
+      <div class="flex h-full w-full flex-col items-center justify-center gap-2 bg-[var(--color-brand-tint)] text-[var(--color-brand-primary)]">
+        <svg viewBox="0 0 32 32" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.4" class="opacity-70" aria-hidden="true"><path d="M16 3c4 5.5 6 9.7 6 13a6 6 0 0 1-12 0c0-3.3 2-7.5 6-13Z" stroke-linejoin="round"/></svg>
+        <span class="text-[11px] font-medium uppercase tracking-wider opacity-80">{{ brand_name }}</span>
+      </div>
+    {% endif %}
+    {% endwith %}
+  </a>
+
+  <div class="absolute top-2.5 z-10 ltr:right-2.5 rtl:left-2.5">
+    {% include "storefront/partials/_wishlist_button.html" with product=product size="xs" variant="overlay" in_wishlist=product.in_wishlist %}
+  </div>
+
+  <div class="flex flex-1 flex-col p-4">
+    <span class="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--color-ink-subtle)]">{{ brand_name }}</span>
+    <a href="{% url 'storefront:product' slug=product.slug %}" title="{{ product_name }}"
+      class="mt-1 line-clamp-2 min-h-[2.5rem] text-[0.9375rem] font-medium leading-snug text-[var(--color-ink)] transition-colors hover:text-[var(--color-brand-primary)]">{{ product_name }}</a>
+
+    {% if product.review_count and product.average_rating != None %}
+      <div class="mt-1.5 flex items-center gap-1.5 text-xs text-[var(--color-ink-muted)]" aria-label="{% t 'product.ratingOutOf' rating=product.average_rating|floatformat:1 %}">
+        <span class="leading-none text-[var(--color-brand-primary)]" aria-hidden="true">{{ product.average_rating|stars }}</span>
+        <span class="tabular-nums">{{ product.average_rating|floatformat:1 }} ({{ product.review_count }})</span>
+      </div>
+    {% endif %}
+
+    <div class="mt-2.5 min-h-[1.75rem]">
+      {% include "storefront/partials/_price.html" with product=product size="md" %}
+    </div>
+
+    <div class="mt-auto pt-3.5">
+      {% include "storefront/partials/_add_to_cart_control.html" with product=product cart_item=product.cart_item %}
+    </div>
+  </div>
+</div>
+{% endwith %}

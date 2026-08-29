@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.db import models
+from django.forms import CheckboxSelectMultiple
 from unfold.admin import ModelAdmin, TabularInline
 
 from .models import Brand, Category, Product, ProductAttribute, ProductImage, ProductVariant
@@ -20,6 +22,7 @@ class ProductAdmin(ModelAdmin):
     list_filter = ("brand", "category", "badge_type", "is_active", "ar_machine_translated")
     search_fields = ("sku", "name_en", "name_ar")
     inlines = [ProductImageInline, ProductVariantInline]
+    autocomplete_fields = ["attributes"]  # BISECT-A2
     prepopulated_fields = {"slug": ("name_en",)}
 
 
@@ -41,3 +44,4 @@ class CategoryAdmin(ModelAdmin):
 class ProductAttributeAdmin(ModelAdmin):
     list_display = ("attribute_type", "value_en", "value_ar", "slug", "ar_machine_translated")
     list_filter = ("attribute_type", "ar_machine_translated")
+    search_fields = ("value_en", "value_ar", "slug")  # enables autocomplete_fields elsewhere

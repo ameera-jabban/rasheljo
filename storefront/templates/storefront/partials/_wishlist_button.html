@@ -1,0 +1,23 @@
+{% load storefront %}{% comment %}
+Ports components/product/WishlistButton.tsx. Django session auth decides
+logged-in state (the storefront uses session auth, not the React app's JWT).
+Params: product; size xs|sm|md; variant default|overlay; in_wishlist (bool).
+{% endcomment %}
+{% with sz=size|default:"md" %}
+{% if not user.is_authenticated %}
+  <a href="{% url 'storefront:login' %}?next={{ request.path|urlencode }}" onclick="event.stopPropagation()"
+    aria-label="{% t 'product.loginToSave' %}" title="{% t 'product.loginToSave' %}"
+    class="flex shrink-0 items-center justify-center rounded-full transition-colors {% if sz == 'xs' %}h-7 w-7{% elif sz == 'sm' %}h-8 w-8{% else %}h-11 w-11{% endif %} {% if variant == 'overlay' %}bg-[var(--color-surface)]/80 shadow-[var(--shadow-sm)] backdrop-blur-sm hover:bg-[var(--color-surface)] text-[var(--color-ink)]{% else %}border border-[var(--color-border)] hover:border-[var(--color-border-strong)] text-[var(--color-ink-muted)]{% endif %}">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.35-9.5-8.5C1 8.5 3 4.5 6.5 4.5c2 0 3.5 1 5.5 3 2-2 3.5-3 5.5-3 3.5 0 5.5 4 4 7C19 15.65 12 20 12 20Z"/></svg>
+  </a>
+{% else %}
+  <button type="button" id="wish-{{ product.id }}"
+    hx-post="{% url 'storefront:wishlist_toggle' product.id %}" hx-target="#wish-{{ product.id }}" hx-swap="outerHTML"
+    onclick="event.stopPropagation()" aria-pressed="{% if in_wishlist %}true{% else %}false{% endif %}"
+    aria-label="{% if in_wishlist %}{% t 'product.removeFromWishlist' %}{% else %}{% t 'product.addToWishlist' %}{% endif %}"
+    title="{% if in_wishlist %}{% t 'product.removeFromWishlist' %}{% else %}{% t 'product.addToWishlist' %}{% endif %}"
+    class="flex shrink-0 items-center justify-center rounded-full transition-colors {% if sz == 'xs' %}h-7 w-7{% elif sz == 'sm' %}h-8 w-8{% else %}h-11 w-11{% endif %} {% if variant == 'overlay' %}bg-[var(--color-surface)]/80 shadow-[var(--shadow-sm)] backdrop-blur-sm hover:bg-[var(--color-surface)]{% else %}border border-[var(--color-border)] hover:border-[var(--color-border-strong)]{% endif %} {% if in_wishlist %}text-[var(--color-sale)]{% elif variant == 'overlay' %}text-[var(--color-ink)]{% else %}text-[var(--color-ink-muted)]{% endif %}">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="{% if in_wishlist %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.35-9.5-8.5C1 8.5 3 4.5 6.5 4.5c2 0 3.5 1 5.5 3 2-2 3.5-3 5.5-3 3.5 0 5.5 4 4 7C19 15.65 12 20 12 20Z"/></svg>
+  </button>
+{% endif %}
+{% endwith %}

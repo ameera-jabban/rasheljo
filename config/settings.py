@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "content",
     "admin_reports",
     "admin_api",
+    "storefront",  # parallel Django-templates frontend (see README); does not affect the React app or /admin/
 ]
 
 MIDDLEWARE = [
@@ -72,8 +73,10 @@ TEMPLATES = [
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
+                "django.template.context_processors.i18n",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "storefront.context.storefront",
             ],
         },
     },

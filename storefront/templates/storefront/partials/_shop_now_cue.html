@@ -1,0 +1,7 @@
+{% load storefront %}{% comment %}
+Ports the ShopNowCue in Home.tsx — a solid-white button on the video scrim.
+Params: size sm|md (default md); cls (extra classes, e.g. margin).
+{% endcomment %}
+<span class="inline-flex w-fit items-center gap-2 self-start rounded-[var(--radius-sm)] bg-white font-semibold text-[var(--color-ink)] shadow-[var(--shadow-md)] transition-transform duration-150 group-hover:scale-[1.03] {% if size == 'sm' %}px-4 py-2 text-[13px]{% else %}px-5 py-2.5 text-sm{% endif %} {{ cls }}">
+  {% t 'home.shopNow' %}{% include "storefront/partials/_arrow_end.html" %}
+</span>
