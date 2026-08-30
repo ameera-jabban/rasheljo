@@ -1,6 +1,8 @@
+import logging
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics, permissions, status
@@ -12,6 +14,7 @@ from .models import Address
 from .serializers import AddressSerializer, RegisterSerializer, UserSerializer
 
 User = get_user_model()
+logger = logging.getLogger("accounts.auth")
 
 
 class RegisterView(generics.CreateAPIView):
@@ -72,25 +75,28 @@ class AddressDetailView(generics.RetrieveUpdateDestroyAPIView):
 class ForgotPasswordView(APIView):
     """POST /api/v1/auth/forgot-password/ — always returns 200 regardless of
     whether the email exists, so this endpoint can't be used to enumerate
-    registered accounts. Sends via Django's email backend (console in dev,
-    real SMTP/Celery task in production — see notifications app note in docs)."""
+    registered accounts. The reset email is sent through the shared
+    ``notify.tasks.send_password_reset_email`` (fail_silently=False); any SMTP
+    error is logged here rather than swallowed."""
 
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        email = request.data.get("email", "").strip()
-        user = User.objects.filter(email__iexact=email).first()
-        if user:
+        from notify.tasks import send_password_reset_email
+
+        email = (request.data.get("email") or "").strip()
+        user = User.objects.filter(email__iexact=email, is_active=True).first()
+        if user and user.email and user.has_usable_password():
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
-            reset_link = f"https://dr-rasheljo.com/reset-password?uid={uid}&token={token}"
-            send_mail(
-                subject="Reset your Dr Rashel Jo password",
-                message=f"Reset your password here: {reset_link}",
-                from_email=None,
-                recipient_list=[user.email],
-                fail_silently=True,
-            )
+            # SITE_URL is env-configurable (defaults to the production domain) so
+            # links are correct per environment instead of a hardcoded host. The
+            # /en/ prefix matches the SPA's /:lang/reset-password route.
+            reset_link = f"{settings.SITE_URL}/en/reset-password?uid={uid}&token={token}"
+            try:
+                send_password_reset_email(user.id, reset_link, "en")
+            except Exception:
+                logger.exception("Password-reset email failed to send for user id=%s", user.id)
         return Response({"detail": "If that email exists, a reset link has been sent."})
 
 

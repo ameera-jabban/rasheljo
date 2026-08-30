@@ -1,0 +1,105 @@
+{% load storefront %}{% comment %}
+Everything inside #shop-interactive: the filter form (sidebar radios + sort) and
+the results column. A single <form> with hx-trigger="change" drives every update —
+htmx serialises all its fields and swaps #shop-interactive, with hx-push-url so
+the browser URL tracks state (like Shop.tsx's setSearchParams). Ports pages/Shop.tsx.
+{% endcomment %}
+<form id="shop-filters" class="md:contents" action="{{ shop_action }}" method="get"
+  hx-get="{{ shop_action }}" hx-target="#shop-interactive" hx-swap="innerHTML show:window:top"
+  hx-trigger="change, submit" hx-push-url="true" hx-sync="this:replace" hx-indicator="#shop-busy"
+  {% comment %}Keep the filter form's own swap/push-url/target from being inherited by the
+  add-to-cart and wishlist buttons rendered inside the results grid — otherwise clicking
+  them pushes the POST URL (/_/cart/add/) into the address bar. Named rather than "*" so
+  the body's hx-headers CSRF token still reaches those buttons.{% endcomment %}
+  hx-disinherit="hx-get hx-target hx-swap hx-push-url hx-sync hx-indicator hx-trigger">
+  {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+
+  {# ---- Filter rail ---- #}
+  <div x-data="{ open: false }" class="md:contents">
+    <button type="button" @click="open = !open" :aria-expanded="open"
+      class="mb-3 flex w-full items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm font-medium shadow-[var(--shadow-xs)] md:hidden">
+      <span class="flex items-center gap-2">
+        <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 5h14M6 10h8M9 15h2"/></svg>
+        {% if is_ar %}التصنيفات{% else %}Filters{% endif %}
+        {% if chips %}<span class="rounded-full bg-[var(--color-brand-primary)] px-1.5 text-[11px] font-semibold text-white">{{ chips|length }}</span>{% endif %}
+      </span>
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" :class="open && 'rotate-180'" class="transition-transform"><path d="m4 6 4 4 4-4"/></svg>
+    </button>
+
+    <aside :class="open ? 'mt-1 block' : 'hidden'"
+      class="space-y-5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-xs)] md:mt-0 md:block md:self-start md:p-5">
+      {% if brands %}{% include "storefront/partials/_filter_section.html" with title_en="Brand" title_ar="الماركة" all_en="All brands" all_ar="كل الماركات" param="brand" active=applied.brand options=brands field="name" %}{% endif %}
+      {% if categories %}{% include "storefront/partials/_filter_section.html" with title_en="Category" title_ar="الفئة" all_en="All categories" all_ar="كل الفئات" param="category" active=applied.category options=categories field="name" scroll=1 %}{% endif %}
+      {% if skin_types %}{% include "storefront/partials/_filter_section.html" with title_en="Skin Type" title_ar="نوع البشرة" all_en="All skin types" all_ar="كل الأنواع" param="skin_type" active=applied.skin_type options=skin_types field="value" %}{% endif %}
+    </aside>
+  </div>
+
+  {# ---- Results column ---- #}
+  <div class="relative [.htmx-request_&]:pointer-events-none [.htmx-request_&]:opacity-50 transition-opacity">
+    <div id="shop-busy" class="htmx-indicator pointer-events-none absolute inset-x-0 -top-1 z-10 flex justify-center">
+      <span class="rounded-full bg-[var(--color-ink)] px-3 py-1 text-xs font-medium text-white shadow-[var(--shadow-md)]">{% if is_ar %}جارٍ التحديث…{% else %}Updating…{% endif %}</span>
+    </div>
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <p class="text-sm text-[var(--color-ink-muted)]">
+        <span class="font-semibold text-[var(--color-ink)]">{{ total_count }}</span>
+        {% if is_ar %}منتج{% else %}{{ total_count|pluralize:"product,products" }}{% endif %}
+      </p>
+      <label class="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+        <span class="hidden sm:inline">{% if is_ar %}ترتيب{% else %}Sort{% endif %}</span>
+        <select name="ordering" aria-label="{% if is_ar %}ترتيب{% else %}Sort{% endif %}"
+          class="rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink)] outline-none transition-colors hover:border-[var(--color-ink-muted)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15">
+          <option value="" {% if not applied.ordering %}selected{% endif %}>{% if is_ar %}مميّز{% else %}Featured{% endif %}</option>
+          <option value="-created_at" {% if applied.ordering == '-created_at' %}selected{% endif %}>{% if is_ar %}الأحدث{% else %}Newest{% endif %}</option>
+          <option value="price" {% if applied.ordering == 'price' %}selected{% endif %}>{% if is_ar %}السعر: من الأقل{% else %}Price: low to high{% endif %}</option>
+          <option value="-price" {% if applied.ordering == '-price' %}selected{% endif %}>{% if is_ar %}السعر: من الأعلى{% else %}Price: high to low{% endif %}</option>
+        </select>
+      </label>
+    </div>
+
+    {% if chips %}
+    <div class="mb-5 flex flex-wrap items-center gap-2">
+      {% for chip in chips %}
+        <button type="button" data-clear="{{ chip.key }}" onclick="this.closest('form').querySelectorAll('input[name='+this.dataset.clear+']').forEach(function(r){r.checked=false}); this.closest('form').dispatchEvent(new Event('change',{bubbles:true}))"
+          class="group inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border-strong)] bg-[var(--color-surface)] py-1 text-xs font-medium text-[var(--color-ink)] transition-colors hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] ltr:pl-3 ltr:pr-2 rtl:pr-3 rtl:pl-2">
+          {{ chip.label }}<span aria-hidden="true" class="text-[var(--color-ink-subtle)] group-hover:text-[var(--color-brand-primary)]">✕</span>
+        </button>
+      {% endfor %}
+      {% if chips|length > 1 %}
+        <button type="button" onclick="this.closest('form').querySelectorAll('input[type=radio]').forEach(function(r){r.checked=false}); this.closest('form').dispatchEvent(new Event('change',{bubbles:true}))"
+          class="text-xs font-medium text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)] ltr:ml-1 rtl:mr-1">{% if is_ar %}مسح الكل{% else %}Clear all{% endif %}</button>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if products %}
+      <div class="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+        {% for product in products %}{% include "storefront/partials/_product_card.html" with product=product %}{% endfor %}
+      </div>
+
+      {% if num_pages > 1 %}
+      <nav class="mt-10 flex items-center justify-center gap-3 text-sm" aria-label="Pagination">
+        {% if page_obj.has_previous %}
+          <button type="submit" name="page" value="{{ page_obj.previous_page_number }}"
+            class="rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] px-4 py-2 font-medium transition-colors hover:border-[var(--color-ink-muted)]">{% if is_ar %}السابق{% else %}Previous{% endif %}</button>
+        {% else %}
+          <span class="rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] px-4 py-2 font-medium opacity-40">{% if is_ar %}السابق{% else %}Previous{% endif %}</span>
+        {% endif %}
+        <span class="px-1 text-[var(--color-ink-muted)]">{% if is_ar %}صفحة {{ page_obj.number }} من {{ num_pages }}{% else %}Page {{ page_obj.number }} of {{ num_pages }}{% endif %}</span>
+        {% if page_obj.has_next %}
+          <button type="submit" name="page" value="{{ page_obj.next_page_number }}"
+            class="rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] px-4 py-2 font-medium transition-colors hover:border-[var(--color-ink-muted)]">{% if is_ar %}التالي{% else %}Next{% endif %}</button>
+        {% else %}
+          <span class="rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] px-4 py-2 font-medium opacity-40">{% if is_ar %}التالي{% else %}Next{% endif %}</span>
+        {% endif %}
+      </nav>
+      {% endif %}
+    {% else %}
+      <div class="flex flex-col items-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)] px-6 py-16 text-center">
+        <svg viewBox="0 0 48 48" width="44" height="44" fill="none" stroke="var(--color-ink-subtle)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="21" cy="21" r="14"/><path d="m31 31 10 10M15 21h12M21 15v12"/></svg>
+        <p class="mt-4 font-display text-lg font-semibold text-[var(--color-ink)]">{% if is_ar %}لا توجد منتجات مطابقة{% else %}No matching products{% endif %}</p>
+        <p class="mt-1 max-w-sm text-sm text-[var(--color-ink-muted)]">{% if is_ar %}جرّبي تعديل الفلاتر أو تصفّحي كامل المجموعة.{% else %}Try adjusting your filters, or browse the full collection.{% endif %}</p>
+        <a href="{% url 'storefront:shop' %}" class="mt-5 rounded-[var(--radius-sm)] bg-[var(--color-ink)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-brand-primary)]">{% if is_ar %}تصفّح كل المنتجات{% else %}Browse all products{% endif %}</a>
+      </div>
+    {% endif %}
+  </div>
+</form>

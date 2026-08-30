@@ -1,0 +1,17 @@
+{% comment %}Ports Breadcrumbs.tsx. Param: crumbs = [{name, url?}], last = current page.{% endcomment %}
+{% if crumbs %}
+<nav aria-label="Breadcrumb" class="pt-1 text-xs text-[var(--color-ink-muted)]">
+  <ol class="flex flex-wrap items-center gap-1.5">
+    {% for c in crumbs %}
+    <li class="flex items-center gap-1.5">
+      {% if c.url and not forloop.last %}
+        <a href="{{ c.url }}" class="hover:text-[var(--color-brand-primary)]">{{ c.name }}</a>
+      {% else %}
+        <span {% if forloop.last %}aria-current="page" class="text-[var(--color-ink)]"{% endif %}>{{ c.name }}</span>
+      {% endif %}
+      {% if not forloop.last %}<span aria-hidden="true" class="text-[var(--color-border)]">/</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</nav>
+{% endif %}

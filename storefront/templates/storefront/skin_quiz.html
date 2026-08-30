@@ -1,0 +1,114 @@
+{% extends "storefront/base.html" %}
+{% load storefront %}
+{% block title %}{% t 'skinQuiz.eyebrow' %} · Dr Rashel Jo{% endblock %}
+{% block description %}{% t 'skinQuiz.metaDescription' %}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-3xl px-4">{% include "storefront/partials/_breadcrumbs.html" with crumbs=crumbs %}</div>
+
+{{ quiz_config|json_script:"skin-quiz-config" }}
+
+<div class="mx-auto max-w-3xl px-4 py-10 md:py-14" x-data="skinQuiz()">
+
+  {# ---- Quiz (hidden once a result is showing) ---- #}
+  <div x-show="!done" class="text-start">
+    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-brand-primary)]">{% t 'skinQuiz.eyebrow' %}</p>
+    <h1 class="mt-2 font-display text-3xl font-semibold tracking-tight text-[var(--color-ink)] md:text-4xl">{% t 'skinQuiz.title' %}</h1>
+    <p class="mt-3 max-w-xl text-[var(--color-ink-muted)]">{% t 'skinQuiz.intro' %}</p>
+
+    {# Progress #}
+    <div class="mt-8">
+      <div class="flex items-center justify-between text-xs font-medium text-[var(--color-ink-muted)]">
+        <span x-text="progressLabel()"></span>
+        <button type="button" x-show="step > 0" @click="step--"
+          class="inline-flex items-center gap-1 text-[var(--color-brand-primary)] transition-colors hover:text-[var(--color-brand-primary-hover)]">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="rtl:-scale-x-100"><path d="M13 8H3M7 4 3 8l4 4"/></svg>
+          {% t 'skinQuiz.back' %}
+        </button>
+      </div>
+      <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--color-surface-muted)]">
+        <div class="h-full rounded-full bg-[var(--color-brand-primary)] transition-[width] duration-300" :style="`width: ${progressPct()}%`"></div>
+      </div>
+    </div>
+
+    {# Questions — all rendered; Alpine reveals the current one #}
+    {% for q in questions %}
+    <fieldset class="mt-8" x-show="step === {{ forloop.counter0 }}" {% if not forloop.first %}x-cloak{% endif %}>
+      <legend class="font-display text-xl font-semibold tracking-tight text-[var(--color-ink)] md:text-2xl">{% t q.title_key %}</legend>
+      <div class="mt-5 grid gap-3">
+        {% for o in q.options %}
+        <button type="button" @click="pick('{{ o.key }}')"
+          :class="answers[{{ forloop.parentloop.counter0 }}] === '{{ o.key }}'
+            ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-tint)] font-medium text-[var(--color-brand-primary)]'
+            : 'border-[var(--color-border)] text-[var(--color-ink)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-surface-muted)]'"
+          class="flex items-center gap-3 rounded-[var(--radius-md)] border px-4 py-3.5 text-start text-sm transition-colors">
+          <span aria-hidden="true" class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors"
+            :class="answers[{{ forloop.parentloop.counter0 }}] === '{{ o.key }}' ? 'border-[var(--color-brand-primary)]' : 'border-[var(--color-border-strong)]'">
+            <span x-show="answers[{{ forloop.parentloop.counter0 }}] === '{{ o.key }}'" class="h-2 w-2 rounded-full bg-[var(--color-brand-primary)]"></span>
+          </span>
+          <span class="min-w-0 flex-1">{% t o.label_key %}</span>
+        </button>
+        {% endfor %}
+      </div>
+    </fieldset>
+    {% endfor %}
+
+    <div class="mt-8 h-5 htmx-indicator" id="quiz-busy" aria-live="polite">
+      <span class="text-xs text-[var(--color-ink-subtle)]">…</span>
+    </div>
+  </div>
+
+  {# ---- Result (filled by htmx) ---- #}
+  <div id="quiz-result" x-show="done" x-cloak></div>
+</div>
+{% endblock %}
+
+{% block body_end %}
+{{ block.super }}
+{% verbatim %}
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('skinQuiz', () => {
+      const cfg = JSON.parse(document.getElementById('skin-quiz-config').textContent);
+      return {
+        step: 0,
+        total: cfg.total,
+        answers: {},
+        done: false,
+        pick(opt) {
+          this.answers[this.step] = opt;
+          if (this.step < this.total - 1) this.step++;
+          else this.finish();
+        },
+        finish() {
+          const counts = {};
+          Object.values(this.answers).forEach(o => {
+            const b = cfg.bucketByOption[o];
+            counts[b] = (counts[b] || 0) + 1;
+          });
+          let best = cfg.priority[0];
+          cfg.priority.forEach(b => { if ((counts[b] || 0) > (counts[best] || 0)) best = b; });
+          this.done = true;
+          htmx.ajax('GET', cfg.resultUrl + '?result=' + best,
+                    { target: '#quiz-result', swap: 'innerHTML show:window:top' });
+        },
+        retake() {
+          this.answers = {};
+          this.step = 0;
+          this.done = false;
+          document.getElementById('quiz-result').innerHTML = '';
+        },
+        progressPct() {
+          return Math.round(((this.step + (this.done ? 1 : 0)) / this.total) * 100);
+        },
+        progressLabel() {
+          return cfg.progressTemplate
+            .replace('{{current}}', this.step + 1)
+            .replace('{{total}}', this.total);
+        },
+      };
+    });
+  });
+</script>
+{% endverbatim %}
+{% endblock %}

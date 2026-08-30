@@ -1,0 +1,118 @@
+{% extends "storefront/base.html" %}
+{% load storefront %}
+
+{% block title %}{{ product|localized }} · Dr Rashel Jo{% endblock %}
+{% block description %}{{ description|striptags|truncatewords:28 }}{% endblock %}
+
+{% block content %}
+{% with pname=product|localized brand_name=product.brand|localized %}
+<div class="mx-auto max-w-7xl px-4 py-8">
+  {% include "storefront/partials/_breadcrumbs.html" with crumbs=crumbs %}
+
+  <div class="mt-2 grid gap-10 lg:grid-cols-2 lg:gap-14">
+    {# ---- Gallery ---- #}
+    <div class="lg:sticky lg:top-24 lg:self-start" x-data="{ active: 0 }">
+      <div class="relative aspect-square overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)]">
+        {% include "storefront/partials/_badge.html" with product=product size="lg" %}
+        {% if product.is_on_sale and product.discount_percent > 0 %}
+          <span class="absolute top-3 z-10 rounded-full bg-[var(--color-sale)] px-2 py-0.5 text-[11px] font-bold text-white ltr:right-3 rtl:left-3">&minus;{{ product.discount_percent }}%</span>
+        {% endif %}
+        {% if product.images.all %}
+          {% for img in product.images.all %}
+            <img x-show="active === {{ forloop.counter0 }}" src="{{ img.image.url }}" alt="{{ img.alt_text_en|default:pname }}" width="800" height="800"
+              class="h-full w-full object-contain p-6 md:p-10" {% if not forloop.first %}x-cloak{% endif %}>
+          {% endfor %}
+        {% else %}
+          <div class="flex h-full flex-col items-center justify-center gap-2 text-[var(--color-brand-primary)]">
+            <svg viewBox="0 0 32 32" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true" class="opacity-60"><path d="M16 3c4 5.5 6 9.7 6 13a6 6 0 0 1-12 0c0-3.3 2-7.5 6-13Z" stroke-linejoin="round"/></svg>
+            <span class="text-xs font-medium uppercase tracking-wider opacity-75">{{ brand_name }}</span>
+          </div>
+        {% endif %}
+      </div>
+      {% if product.images.all|length > 1 %}
+      <div class="mt-3 flex flex-wrap gap-2.5">
+        {% for img in product.images.all %}
+          <button type="button" @click="active = {{ forloop.counter0 }}" aria-label="{{ pname }} — {{ forloop.counter }}"
+            :class="active === {{ forloop.counter0 }} ? 'border-[var(--color-brand-primary)] ring-1 ring-[var(--color-brand-primary)]' : 'border-[var(--color-border)] hover:border-[var(--color-border-strong)]'"
+            class="h-16 w-16 overflow-hidden rounded-[var(--radius-sm)] border bg-[var(--color-bg)] p-1 transition-all">
+            <img src="{{ img.image.url }}" alt="{{ img.alt_text_en|default:pname }} {{ forloop.counter }}" width="64" height="64" loading="lazy" class="h-full w-full object-contain">
+          </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    {# ---- Buy box ---- #}
+    <div>
+      <a href="{% url 'storefront:brand' slug=product.brand.slug %}" class="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-brand-primary)] hover:underline">{{ brand_name }}</a>
+      <h1 class="mt-1.5 font-display text-[1.75rem] font-semibold leading-tight tracking-tight text-[var(--color-ink)] md:text-[2.125rem]">{{ pname }}</h1>
+
+      {% if review_count %}
+      <a href="#reviews" class="mt-2 inline-flex items-center gap-1.5 text-sm text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]">
+        <span class="leading-none text-[var(--color-brand-primary)]" aria-hidden="true">{{ review_avg|stars }}</span>
+        {{ review_avg|floatformat:1 }} · {{ review_count }} {% if is_ar %}تقييم{% else %}{{ review_count|pluralize:"review,reviews" }}{% endif %}
+      </a>
+      {% endif %}
+
+      <div class="mt-5 flex items-baseline gap-3">{% include "storefront/partials/_price.html" with product=product size="lg" %}</div>
+
+      {% if not product.in_stock %}
+        <p class="mt-3 inline-flex items-center gap-2 rounded-full bg-[var(--color-surface-muted)] px-3 py-1 text-sm font-medium text-[var(--color-ink-muted)]"><span class="h-2 w-2 rounded-full bg-[var(--color-ink-subtle)]"></span>{% t 'product.outOfStock' %}</p>
+      {% elif low_stock %}
+        <div class="mt-3 max-w-xs">
+          <p class="text-sm font-semibold text-[var(--color-sale)]">{% t 'product.lowStock' count=product.stock %}</p>
+          <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-border)]" role="progressbar" aria-valuemin="0" aria-valuemax="{{ low_stock_threshold }}" aria-valuenow="{{ product.stock }}">
+            <div class="h-full rounded-full bg-[var(--color-sale)]" style="width: {% widthratio product.stock low_stock_threshold 100 %}%"></div>
+          </div>
+        </div>
+      {% else %}
+        <p class="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[var(--color-success)]"><span class="h-2 w-2 rounded-full bg-[var(--color-success)]"></span>{% t 'product.inStock' %}</p>
+      {% endif %}
+
+      {# Quantity + Add to cart (htmx) #}
+      <form class="mt-6 flex items-stretch gap-3" x-data="{ qty: 1 }"
+        hx-post="{% url 'storefront:cart_add' %}" hx-vals='{"product_id": {{ product.id }}}'
+        hx-target="#pdp-atc-msg" hx-swap="outerHTML" hx-disabled-elt="find button[type=submit]">
+        <input type="hidden" name="quantity" :value="qty">
+        <div class="flex items-center rounded-[var(--radius-sm)] border border-[var(--color-border-strong)]">
+          <button type="button" @click="qty = Math.max(1, qty - 1)" :disabled="qty <= 1" aria-label="{% t 'cart.decrease' %}" class="flex h-12 w-11 items-center justify-center text-lg text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)] disabled:opacity-30">−</button>
+          <span class="w-9 text-center text-sm font-semibold tabular-nums" x-text="qty" aria-live="polite">1</span>
+          <button type="button" @click="qty = qty + 1" aria-label="{% t 'cart.increase' %}" class="flex h-12 w-11 items-center justify-center text-lg text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]">+</button>
+        </div>
+        <button type="submit" {% if not product.in_stock %}disabled{% endif %}
+          class="flex h-12 flex-1 items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--color-brand-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-primary)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[var(--color-ink-subtle)]">
+          {% if product.in_stock %}{% t 'product.addToCart' %}{% else %}{% t 'product.outOfStock' %}{% endif %}
+        </button>
+        {% include "storefront/partials/_wishlist_button.html" with product=product size="md" variant="default" in_wishlist=product.in_wishlist %}
+      </form>
+      {% if product.cart_item %}{% include "storefront/partials/_pdp_cart_msg.html" with in_cart_qty=product.cart_item.quantity %}{% else %}<span id="pdp-atc-msg"></span>{% endif %}
+
+      {# Trust row #}
+      <ul class="mt-6 divide-y divide-[var(--color-border)] rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] text-sm">
+        {% for label in trust_rows %}<li class="flex items-center gap-3 px-4 py-2.5"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="var(--color-brand-primary)" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true" class="shrink-0"><path d="m3 8.5 3.2 3.2L13 5"/></svg><span class="text-[var(--color-ink-muted)]">{{ label }}</span></li>{% endfor %}
+      </ul>
+
+      {# Details #}
+      <div class="mt-8 space-y-6 border-t border-[var(--color-border)] pt-7">
+        {% if description %}<section><h2 class="mb-2 font-display text-lg font-semibold">{% t 'product.description' %}</h2><p class="text-sm leading-relaxed text-[var(--color-ink-muted)]">{{ description|linebreaksbr }}</p></section>{% endif %}
+        {% if benefits %}<section><h2 class="mb-2.5 font-display text-lg font-semibold">{% t 'product.benefits' %}</h2><ul class="space-y-2 text-sm text-[var(--color-ink)]">{% for b in benefits %}<li class="flex items-start gap-2.5"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="var(--color-success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="mt-0.5 shrink-0"><path d="m3 8.5 3.2 3.2L13 5"/></svg><span>{{ b }}</span></li>{% endfor %}</ul></section>{% endif %}
+        {% if how_to_use %}<section><h2 class="mb-2 font-display text-lg font-semibold">{% t 'product.howToUse' %}</h2><p class="text-sm leading-relaxed text-[var(--color-ink-muted)]">{{ how_to_use|linebreaksbr }}</p></section>{% endif %}
+      </div>
+
+      <div id="reviews" class="scroll-mt-24">
+        {% include "storefront/partials/_reviews.html" %}
+      </div>
+    </div>
+  </div>
+
+  {% if recommendations %}
+  <div class="mt-16 border-t border-[var(--color-border)] pt-10">
+    <h2 class="mb-6 font-display text-2xl font-semibold tracking-tight">{% t 'product.relatedProducts' %}</h2>
+    <div class="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4">
+      {% for p in recommendations %}{% include "storefront/partials/_product_card.html" with product=p %}{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endwith %}
+{% endblock %}

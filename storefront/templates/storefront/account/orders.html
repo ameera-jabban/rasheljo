@@ -1,0 +1,30 @@
+{% extends "storefront/account/_base.html" %}
+{% load storefront %}
+{% block acct_body %}
+{% if just_placed %}
+<div class="mb-4 flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-success)]/30 bg-[var(--color-success)]/8 p-3.5 text-sm text-[var(--color-success)]">
+  <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8.5 3.2 3.2L13 5"/></svg>
+  {% if is_ar %}تم استلام طلبك #{{ just_placed }}.{% else %}Order #{{ just_placed }} placed — thank you!{% endif %}
+</div>
+{% endif %}
+{% if orders %}
+<ul class="space-y-3">
+  {% for o in orders %}
+  <li><a href="{% url 'storefront:account_order_detail' o.id %}" class="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-sm shadow-[var(--shadow-xs)] transition-colors hover:border-[var(--color-border-strong)]">
+    <div>
+      <p class="font-semibold">{% t 'account.order' %} #{{ o.id }}</p>
+      <p class="mt-0.5 text-xs text-[var(--color-ink-subtle)]">{{ o.created_at|date:"j M Y" }}</p>
+    </div>
+    {% include "storefront/partials/_order_status_badge.html" with status=o.status %}
+    <span class="price font-semibold tracking-tight">{{ o.total|money }}</span>
+  </a></li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="flex flex-col items-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)] px-6 py-16 text-center">
+  <div class="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-brand-tint)] text-[var(--color-brand-primary)]"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l1 12H5L6 8Z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg></div>
+  <p class="mt-4 font-display text-lg font-semibold">{% t 'account.noOrders' %}</p>
+  <a href="{% url 'storefront:shop' %}" class="mt-4 inline-flex h-10 items-center rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] px-5 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-brand-primary-hover)]">{% t 'account.startShopping' %}</a>
+</div>
+{% endif %}
+{% endblock %}

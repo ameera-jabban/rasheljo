@@ -1,0 +1,16 @@
+{% extends "storefront/account/_base.html" %}
+{% load storefront %}
+{% block acct_body %}
+{% if products %}
+<div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+  {% for product in products %}{% include "storefront/partials/_product_card.html" with product=product %}{% endfor %}
+</div>
+{% else %}
+<div class="flex flex-col items-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)] px-6 py-16 text-center">
+  <div class="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-brand-tint)] text-[var(--color-brand-primary)]"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.35-9.5-8.5C1 8 3 4.5 6.5 4.5c2 0 3.5 1 5.5 3 2-2 3.5-3 5.5-3 3.5 0 5.5 3.5 4 7C19 15.65 12 20 12 20Z"/></svg></div>
+  <p class="mt-4 font-display text-lg font-semibold">{% t 'account.emptyWishlist' %}</p>
+  <p class="mt-1 text-sm text-[var(--color-ink-muted)]">{% t 'account.emptyWishlistSub' %}</p>
+  <a href="{% url 'storefront:shop' %}" class="mt-4 inline-flex h-10 items-center rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] px-5 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-brand-primary-hover)]">{% t 'account.browseProducts' %}</a>
+</div>
+{% endif %}
+{% endblock %}

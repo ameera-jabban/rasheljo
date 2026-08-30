@@ -1,0 +1,10 @@
+{% load storefront %}{% comment %}Checkout order-summary card. Included in checkout.html and OOB-swapped by step transitions (pass oob=1).{% endcomment %}
+<div id="checkout-summary"{% if oob %} hx-swap-oob="true"{% endif %} class="space-y-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-xs)]">
+  <h2 class="font-display text-lg font-semibold">{% t 'checkout.orderSummary' %}</h2>
+  <dl class="space-y-2 text-sm">
+    <div class="flex justify-between"><dt class="text-[var(--color-ink-muted)]">{% t 'cart.subtotal' %}</dt><dd class="price font-medium">{{ totals.subtotal|money }}</dd></div>
+    {% if totals.discount %}<div class="flex justify-between text-[var(--color-success)]"><dt>{% t 'checkout.discount' %}</dt><dd class="price font-medium">&minus;{{ totals.discount|money }}</dd></div>{% endif %}
+    <div class="flex justify-between"><dt class="text-[var(--color-ink-muted)]">{% t 'checkout.shipping' %}</dt><dd class="price font-medium">{% if shipping_cost != None %}{{ shipping_cost|money }}{% else %}—{% endif %}</dd></div>
+    <div class="flex justify-between border-t border-[var(--color-border)] pt-3 text-base font-semibold"><dt>{% t 'checkout.total' %}</dt><dd class="price text-lg tracking-tight">{{ grand_total|money }}</dd></div>
+  </dl>
+</div>

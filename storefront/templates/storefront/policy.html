@@ -1,0 +1,24 @@
+{% extends "storefront/base.html" %}
+{% load storefront %}
+{% block title %}{{ title }} · Dr Rashel Jo{% endblock %}
+{% block description %}{{ body|default:title|truncatewords:28 }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-3xl px-4">{% include "storefront/partials/_breadcrumbs.html" with crumbs=crumbs %}</div>
+<article class="mx-auto max-w-3xl px-4 pb-16 pt-6">
+  <h1 class="font-display text-3xl font-semibold tracking-tight text-[var(--color-ink)] md:text-[2.25rem]">{{ title }}</h1>
+  <p class="mt-2 text-sm text-[var(--color-ink-subtle)]">{% t 'policy.lastUpdated' date=updated|date:"j F Y" %}</p>
+  <div class="mt-8 border-t border-[var(--color-border)] pt-8">
+    {% if body %}
+      <div class="whitespace-pre-line text-[0.9375rem] leading-relaxed text-[var(--color-ink-muted)]">{{ body }}</div>
+    {% else %}
+      <div class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)] px-6 py-14 text-center">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-brand-tint)] text-[var(--color-brand-primary)]"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6H8Z"/><path d="M14 3v6h6M9 13h6M9 17h4"/></svg></div>
+        <p class="mt-4 font-display text-lg font-semibold text-[var(--color-ink)]">{% t 'policy.comingSoonTitle' %}</p>
+        <p class="mx-auto mt-1.5 max-w-md text-sm text-[var(--color-ink-muted)]">{% t 'policy.comingSoon' %}</p>
+        <a href="{% url 'storefront:shop' %}" class="mt-5 inline-flex h-10 items-center rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] px-5 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-brand-primary-hover)]">{% t 'policy.backToShop' %}</a>
+      </div>
+    {% endif %}
+  </div>
+</article>
+{% endblock %}

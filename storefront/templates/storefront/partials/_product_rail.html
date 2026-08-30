@@ -7,7 +7,7 @@ view_all_qs (querystring appended to /shop). Renders nothing when empty.
   <div class="mb-6 flex items-end justify-between gap-4">
     <h2 class="font-display text-2xl font-semibold tracking-tight text-[var(--color-ink)] md:text-[1.75rem]">{{ title }}</h2>
     <a href="{% url 'storefront:shop' %}{{ view_all_qs }}" class="group inline-flex shrink-0 items-center gap-1.5 pb-1 text-sm font-medium text-[var(--color-brand-primary)] transition-colors hover:text-[var(--color-brand-primary-hover)]">
-      {% t 'home.viewAll' %}{% include "storefront/partials/_arrow_end.html" with cls="transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" %}
+      {% t 'home.viewAll' %}{% include "storefront/partials/_arrow_end.html" with arrow_cls="transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" %}
     </a>
   </div>
   <div class="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4">

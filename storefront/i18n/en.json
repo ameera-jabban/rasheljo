@@ -63,6 +63,7 @@
     "increase": "Increase quantity",
     "decrease": "Decrease quantity",
     "updateFailed": "Couldn't update cart",
+    "removedToast": "Item removed from cart successfully.",
     "items": "{{count}} items",
     "orderSummary": "Order Summary",
     "coupon": "Coupon code",

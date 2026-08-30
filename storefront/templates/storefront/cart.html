@@ -1,0 +1,9 @@
+{% extends "storefront/base.html" %}
+{% load storefront %}
+{% block title %}{% t 'cart.title' %} · Dr Rashel Jo{% endblock %}
+
+{% block content %}
+<div id="cart-body">
+  {% include "storefront/partials/_cart_body.html" %}
+</div>
+{% endblock %}

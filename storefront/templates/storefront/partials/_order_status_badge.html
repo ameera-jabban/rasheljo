@@ -1,0 +1,11 @@
+{% load storefront %}{% comment %}Ports components/OrderStatusBadge.tsx. Param: status.{% endcomment %}
+{% with s=status %}
+<span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold
+  {% if s == 'delivered' %}bg-[var(--color-success)]/12 text-[var(--color-success)]
+  {% elif s == 'cancelled' %}bg-[var(--color-sale)]/12 text-[var(--color-sale)]
+  {% elif s == 'pending' %}bg-[var(--color-brand-primary)]/12 text-[var(--color-brand-primary)]
+  {% elif s == 'confirmed' or s == 'processing' or s == 'shipped' %}bg-[var(--color-brand-secondary)]/12 text-[var(--color-brand-secondary)]
+  {% else %}bg-[var(--color-surface-muted)] text-[var(--color-ink-muted)]{% endif %}">
+  <span class="h-1.5 w-1.5 rounded-full bg-current"></span>{% t 'orderStatus.'|add:s %}
+</span>
+{% endwith %}

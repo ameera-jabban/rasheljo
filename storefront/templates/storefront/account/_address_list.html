@@ -1,0 +1,20 @@
+{% load storefront %}
+<div id="address-list">
+{% if addresses %}
+<ul class="space-y-2.5">
+  {% for a in addresses %}
+  <li class="flex items-start justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-sm shadow-[var(--shadow-xs)]">
+    <div>
+      <p class="flex items-center gap-2 font-medium">{{ a.name }}{% if a.is_default %}<span class="rounded-full bg-[var(--color-brand-tint)] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-brand-primary)]">{% t 'account.default' %}</span>{% endif %}</p>
+      <p class="mt-0.5 text-[var(--color-ink-muted)]">{{ a.address_line }}, {{ a.city }}</p>
+      <p class="text-[var(--color-ink-muted)]">{{ a.phone }}</p>
+    </div>
+    <button type="button" hx-post="{% url 'storefront:account_address_delete' a.id %}" hx-target="#address-list" hx-swap="outerHTML"
+      class="shrink-0 text-xs font-medium text-[var(--color-ink-muted)] underline underline-offset-2 transition-colors hover:text-[var(--color-sale)]">{% t 'account.remove' %}</button>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="rounded-[var(--radius-md)] border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)] p-8 text-center text-sm text-[var(--color-ink-muted)]">{% t 'account.noAddresses' %}</div>
+{% endif %}
+</div>

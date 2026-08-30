@@ -68,8 +68,20 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [],
-        "APP_DIRS": True,
+        # Explicit loaders (not APP_DIRS) so the cached.Loader can wrap them even
+        # in DEBUG — the storefront's product cards nest ~6 {% include %}s each and
+        # a 24-card grid re-compiling every partial per request is ~1.5s of pure
+        # template parsing. Cached compiles each partial once.
         "OPTIONS": {
+            "loaders": [
+                (
+                    "django.template.loaders.cached.Loader",
+                    [
+                        "django.template.loaders.filesystem.Loader",
+                        "django.template.loaders.app_directories.Loader",
+                    ],
+                ),
+            ],
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
@@ -111,7 +123,17 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    # Prod: whitenoise's hashed+compressed manifest storage. Dev: plain storage so
+    # `{% static %}` returns unhashed paths that `runserver` serves straight from
+    # the finders — no `collectstatic` needed to iterate, and no stale-manifest
+    # surprises for the storefront or the /admin/ theme.
+    "staticfiles": {
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if DEBUG
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        )
+    },
 }
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -177,9 +199,32 @@ CACHES = {
     }
 }
 
-# --- Email (console in dev; swap EMAIL_BACKEND for real SMTP in production) ---
-EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="no-reply@dr-rasheljo.com")
+# --- Email ------------------------------------------------------------------
+# Every EMAIL_* value is read HERE (not only in settings_production) so outbound
+# mail — password-reset links especially — works no matter which settings module
+# is active on the host. Real SMTP is used automatically whenever it's configured
+# (EMAIL_HOST set) or whenever DEBUG is off; the console backend is only a
+# local-dev convenience so you don't need a mail server to click around.
+EMAIL_HOST = env("EMAIL_HOST", default="")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=15)  # never let a dead SMTP host hang a worker
+
+_default_email_backend = (
+    "django.core.mail.backends.smtp.EmailBackend"
+    if (EMAIL_HOST or not DEBUG)
+    else "django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_BACKEND = env("EMAIL_BACKEND", default=_default_email_backend)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Dr Rashel Jo <no-reply@dr-rasheljo.com>")
+SERVER_EMAIL = env("SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
+
+# Behind Render's TLS-terminating proxy: trust X-Forwarded-Proto so
+# request.build_absolute_uri() (the storefront password-reset link) emits https://.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # --- Logging ---
 LOGGING = {

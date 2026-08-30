@@ -1,0 +1,52 @@
+{% load storefront %}{% comment %}
+Ports components/product/Reviews.tsx. Swapped in place by the review-create htmx
+POST. Params from _review_ctx(): product, reviews, review_count, review_avg,
+can_review, already_reviewed, form_error.
+{% endcomment %}
+<div id="reviews-block" class="mt-8 border-t border-[var(--color-border)] pt-6" x-data="{ showForm: false }">
+  <div class="mb-4 flex items-center justify-between">
+    <h2 class="font-medium">
+      {% if is_ar %}التقييمات{% else %}Reviews{% endif %}
+      {% if review_avg %}<span class="text-[var(--color-ink-muted)]">({{ review_avg|floatformat:1 }} {% if is_ar %}متوسط{% else %}avg{% endif %}, {{ review_count }})</span>{% endif %}
+    </h2>
+    {% if can_review %}
+      <button type="button" @click="showForm = !showForm" class="text-sm text-[var(--color-brand-primary)]" x-text="showForm ? '{% if is_ar %}إلغاء{% else %}Cancel{% endif %}' : '{% if is_ar %}اكتب تقييماً{% else %}Write a review{% endif %}'">{% if is_ar %}اكتب تقييماً{% else %}Write a review{% endif %}</button>
+    {% elif not user.is_authenticated %}
+      <a href="{% url 'storefront:login' %}?next={{ request.path|urlencode }}" class="text-sm text-[var(--color-brand-primary)]">{% if is_ar %}سجّلي الدخول للتقييم{% else %}Log in to review{% endif %}</a>
+    {% endif %}
+  </div>
+
+  {% if can_review %}
+  <form x-show="showForm" x-cloak class="mb-6 space-y-3 rounded-[var(--radius-md)] border border-[var(--color-border)] p-4"
+    hx-post="{% url 'storefront:review_create' product.id %}" hx-target="#reviews-block" hx-swap="outerHTML" hx-disabled-elt="find button[type=submit]"
+    x-data="{ rating: 5 }">
+    <div class="flex items-center gap-1 text-xl">
+      <template x-for="n in 5" :key="n">
+        <button type="button" @click="rating = n" :class="n <= rating ? 'text-[var(--color-brand-primary)]' : 'text-[var(--color-border)]'">★</button>
+      </template>
+      <input type="hidden" name="rating" :value="rating">
+    </div>
+    <textarea name="body" rows="3" placeholder="{% if is_ar %}شاركينا رأيك في هذا المنتج…{% else %}Share your thoughts about this product…{% endif %}"
+      class="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-2 text-sm"></textarea>
+    {% if form_error %}<p class="text-xs text-[var(--color-sale)]">{{ form_error }}</p>{% endif %}
+    <button type="submit" class="h-10 rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] px-4 text-sm font-medium text-white disabled:opacity-40">{% if is_ar %}إرسال التقييم{% else %}Submit review{% endif %}</button>
+  </form>
+  {% endif %}
+
+  {% if reviews %}
+  <div class="space-y-4">
+    {% for r in reviews %}
+    <div class="border-b border-[var(--color-border)] pb-4 last:border-0">
+      <div class="flex items-center gap-2">
+        <span class="text-[var(--color-brand-primary)]" aria-label="{{ r.rating }} / 5">{{ r.rating|stars }}</span>
+        <span class="text-sm font-medium">{{ r.display_name }}</span>
+        {% if r.is_verified_purchase %}<span class="rounded-full bg-[var(--color-success)]/10 px-2 py-0.5 text-xs text-[var(--color-success)]">{% if is_ar %}شراء موثّق{% else %}Verified purchase{% endif %}</span>{% endif %}
+      </div>
+      {% if r.body %}<p class="mt-1 text-sm text-[var(--color-ink-muted)]">{{ r.body }}</p>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-sm text-[var(--color-ink-muted)]">{% if is_ar %}لا توجد تقييمات بعد — كوني أول من يكتب واحداً.{% else %}No reviews yet — be the first to leave one.{% endif %}</p>
+  {% endif %}
+</div>

@@ -12,7 +12,7 @@ Params: product; size xs|sm|md; variant default|overlay; in_wishlist (bool).
   </a>
 {% else %}
   <button type="button" id="wish-{{ product.id }}"
-    hx-post="{% url 'storefront:wishlist_toggle' product.id %}" hx-target="#wish-{{ product.id }}" hx-swap="outerHTML"
+    hx-post="{% url 'storefront:wishlist_toggle' product.id %}?size={{ sz }}&variant={{ variant|default:'default' }}" hx-target="#wish-{{ product.id }}" hx-swap="outerHTML"
     onclick="event.stopPropagation()" aria-pressed="{% if in_wishlist %}true{% else %}false{% endif %}"
     aria-label="{% if in_wishlist %}{% t 'product.removeFromWishlist' %}{% else %}{% t 'product.addToWishlist' %}{% endif %}"
     title="{% if in_wishlist %}{% t 'product.removeFromWishlist' %}{% else %}{% t 'product.addToWishlist' %}{% endif %}"

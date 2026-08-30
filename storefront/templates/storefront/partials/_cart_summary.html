@@ -1,0 +1,45 @@
+{% load storefront %}{% comment %}Order-summary card — ports the aside in Cart.tsx. Coupon apply/remove swap this via outerHTML.{% endcomment %}
+<div id="cart-summary" class="space-y-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-xs)]">
+  <h2 class="font-display text-lg font-semibold">{% t 'cart.orderSummary' %}</h2>
+
+  {% if cart.coupon_code and totals.discount %}
+    <div class="flex items-center justify-between rounded-[var(--radius-sm)] bg-[var(--color-brand-tint)] px-3 py-2 text-sm">
+      <span class="flex items-center gap-1.5 text-[var(--color-brand-primary)]">
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8.5 3.2 3.2L13 5"/></svg>
+        <strong class="font-semibold">{{ cart.coupon_code }}</strong>
+      </span>
+      <button type="button" hx-post="{% url 'storefront:coupon_remove' %}" hx-target="#cart-summary" hx-swap="outerHTML"
+        class="text-xs font-medium text-[var(--color-ink-muted)] underline underline-offset-2 hover:text-[var(--color-sale)]">{% t 'cart.remove' %}</button>
+    </div>
+  {% else %}
+    <form hx-post="{% url 'storefront:coupon_apply' %}" hx-target="#cart-summary" hx-swap="outerHTML" class="flex gap-2">
+      <input name="code" placeholder="{% t 'cart.coupon' %}" aria-label="{% t 'cart.coupon' %}"
+        class="min-w-0 flex-1 rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-sm uppercase outline-none transition-colors focus:border-[var(--color-brand-primary)] focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15">
+      <button type="submit" class="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-ink)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--color-brand-primary)]">{% t 'cart.apply' %}</button>
+    </form>
+  {% endif %}
+  {% if coupon_error %}<p class="text-xs text-[var(--color-sale)]">{{ coupon_error }}</p>{% endif %}
+
+  <dl class="space-y-2 border-t border-[var(--color-border)] pt-4 text-sm">
+    <div class="flex items-center justify-between">
+      <dt class="text-[var(--color-ink-muted)]">{% t 'cart.subtotal' %}</dt>
+      <dd class="price font-medium">{{ totals.subtotal|money }}</dd>
+    </div>
+    {% if totals.discount %}
+      <div class="flex items-center justify-between text-[var(--color-success)]">
+        <dt>{% t 'cart.discount' %}</dt>
+        <dd class="price font-medium">&minus;{{ totals.discount|money }}</dd>
+      </div>
+    {% endif %}
+    <div class="flex items-center justify-between border-t border-[var(--color-border)] pt-3 text-base font-semibold">
+      <dt>{% t 'cart.total' %}</dt>
+      <dd class="price text-lg tracking-tight">{{ totals.total|money }}</dd>
+    </div>
+  </dl>
+
+  <a href="{% url 'storefront:checkout' %}" class="flex h-12 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--color-brand-primary-hover)]">{% t 'cart.checkout' %}</a>
+  <p class="flex items-center justify-center gap-1.5 text-center text-xs text-[var(--color-ink-subtle)]">
+    <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
+    {% t 'cart.secureCheckout' %}
+  </p>
+</div>

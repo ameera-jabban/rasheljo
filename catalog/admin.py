@@ -22,8 +22,13 @@ class ProductAdmin(ModelAdmin):
     list_filter = ("brand", "category", "badge_type", "is_active", "ar_machine_translated")
     search_fields = ("sku", "name_en", "name_ar")
     inlines = [ProductImageInline, ProductVariantInline]
-    autocomplete_fields = ["attributes"]  # BISECT-A2
     prepopulated_fields = {"slug": ("name_en",)}
+    # Render the `attributes` M2M as a checkbox list rather than a <select multiple>.
+    # django-unfold 0.104's themed multi-select widget makes its own bundled Alpine
+    # throw during init on the product change form when the field has selected
+    # values, blanking the page (x-cloak never clears). A plain widget sidesteps it,
+    # and a checkbox list is the better UX for ~20 skin-type/concern attributes anyway.
+    formfield_overrides = {models.ManyToManyField: {"widget": CheckboxSelectMultiple}}
 
 
 @admin.register(Brand)
@@ -44,4 +49,4 @@ class CategoryAdmin(ModelAdmin):
 class ProductAttributeAdmin(ModelAdmin):
     list_display = ("attribute_type", "value_en", "value_ar", "slug", "ar_machine_translated")
     list_filter = ("attribute_type", "ar_machine_translated")
-    search_fields = ("value_en", "value_ar", "slug")  # enables autocomplete_fields elsewhere
+    search_fields = ("value_en", "value_ar", "slug")

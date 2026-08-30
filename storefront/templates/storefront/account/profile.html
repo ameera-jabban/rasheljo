@@ -1,0 +1,20 @@
+{% extends "storefront/account/_base.html" %}
+{% load storefront %}
+{% block acct_body %}
+{% with field="w-full rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-brand-primary)] focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15" %}
+<form method="post" class="max-w-md space-y-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-xs)]">
+  {% csrf_token %}
+  <h2 class="font-display text-lg font-semibold">{% t 'account.profile' %}</h2>
+  <div><label class="mb-1.5 block text-sm font-medium">{% t 'account.email' %}</label>
+    <input disabled value="{{ user.email }}" class="{{ field }} cursor-not-allowed text-[var(--color-ink-subtle)]"></div>
+  <div><label class="mb-1.5 block text-sm font-medium">{% t 'account.firstName' %}</label>
+    <input name="first_name" value="{{ user.first_name }}" class="{{ field }}"></div>
+  <div><label class="mb-1.5 block text-sm font-medium">{% t 'account.lastName' %}</label>
+    <input name="last_name" value="{{ user.last_name }}" class="{{ field }}"></div>
+  <div><label class="mb-1.5 block text-sm font-medium">{% t 'account.phone' %}</label>
+    <input type="tel" name="phone" value="{{ user.phone }}" class="{{ field }}"></div>
+  {% if saved %}<p class="flex items-center gap-1.5 text-sm text-[var(--color-success)]"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8.5 3.2 3.2L13 5"/></svg>{% t 'account.saved' %}</p>{% endif %}
+  <button type="submit" class="flex h-11 w-full items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--color-brand-primary-hover)]">{% t 'account.saveChanges' %}</button>
+</form>
+{% endwith %}
+{% endblock %}

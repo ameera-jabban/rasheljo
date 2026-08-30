@@ -1,0 +1,45 @@
+{% extends "storefront/auth/_shell.html" %}
+{% load storefront %}
+{% block shell_title %}{% t 'auth.registerTitle' %}{% endblock %}
+{% block heading %}{% t 'auth.registerTitle' %}{% endblock %}
+{% block subheading %}{% t 'auth.registerSubtitle' %}{% endblock %}
+
+{% block auth_body %}
+{% with field="w-full rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-brand-primary)] focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15" %}
+<form method="post" class="space-y-4" novalidate>
+  {% csrf_token %}
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+  <div>
+    <label class="mb-1.5 block text-sm font-medium">{% t 'auth.firstName' %}</label>
+    <input type="text" name="first_name" autocomplete="given-name" value="{{ data.first_name }}" class="{{ field }}">
+    {% if errors.first_name %}<p class="mt-1 text-xs text-[var(--color-sale)]">{{ errors.first_name }}</p>{% endif %}
+  </div>
+  <div>
+    <label class="mb-1.5 block text-sm font-medium">{% t 'auth.email' %}</label>
+    <input type="email" name="email" autocomplete="email" value="{{ data.email }}" class="{{ field }}">
+    {% if errors.email %}<p class="mt-1 text-xs text-[var(--color-sale)]">{{ errors.email }}</p>{% endif %}
+  </div>
+  <div>
+    <label class="mb-1.5 block text-sm font-medium">{% t 'auth.phoneOptional' %}</label>
+    <input type="tel" name="phone" autocomplete="tel" value="{{ data.phone }}" class="{{ field }}">
+  </div>
+  <div x-data="{ show: false }">
+    <label class="mb-1.5 block text-sm font-medium">{% t 'auth.password' %}</label>
+    <div class="relative">
+      <input :type="show ? 'text' : 'password'" name="password" autocomplete="new-password" minlength="8" class="{{ field }} ltr:pr-11 rtl:pl-11">
+      <button type="button" @click="show = !show" aria-label="{% t 'auth.showPassword' %}" class="absolute top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] ltr:right-1.5 rtl:left-1.5">
+        <svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 10s3-5 8-5 8 5 8 5-3 5-8 5-8-5-8-5Z"/><circle cx="10" cy="10" r="2.5"/><path x-show="show" x-cloak d="m3 3 14 14"/></svg>
+      </button>
+    </div>
+    {% if errors.password %}<p class="mt-1 text-xs text-[var(--color-sale)]">{{ errors.password }}</p>{% endif %}
+  </div>
+  <button type="submit" class="flex h-11 w-full items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--color-brand-primary-hover)]">{% t 'auth.register' %}</button>
+</form>
+{% endwith %}
+{% endblock %}
+
+{% block auth_footer %}
+<div class="mt-5 text-center text-sm text-[var(--color-ink-muted)]">
+  {% t 'auth.haveAccount' %} <a href="{% url 'storefront:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="font-medium text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)]">{% t 'auth.signIn' %}</a>
+</div>
+{% endblock %}

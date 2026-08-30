@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ site_settings.site_name|default:"Dr Rashel Jo" }}{% endblock %}</title>
   <meta name="description" content="{% block description %}{% t 'home.heroSub' %}{% endblock %}">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'storefront/img/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{% static 'storefront/img/favicon-192x192.png' %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'storefront/img/favicon-180x180.png' %}">
+
   {% block head_extra %}{% endblock %}
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,7 +24,7 @@
   class="min-h-screen bg-[var(--color-bg)] font-sans text-[var(--color-ink)] antialiased"
   hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
   x-data="{ toast: null }"
-  @toast.window="toast = $event.detail; clearTimeout(window.__t); window.__t = setTimeout(() => toast = null, 3200)"
+  @toast.window="toast = ($event.detail && $event.detail.value !== undefined) ? $event.detail.value : $event.detail; clearTimeout(window.__t); window.__t = setTimeout(() => toast = null, 3200)"
 >
   {% include "storefront/partials/_header.html" %}
 

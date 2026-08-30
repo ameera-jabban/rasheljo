@@ -1,0 +1,20 @@
+{% extends "storefront/base.html" %}
+{% load storefront %}
+{% block title %}{% block acct_title %}{% t 'account.title' %}{% endblock %} · Dr Rashel Jo{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-6xl px-4 py-10">
+  <h1 class="mb-6 font-display text-[1.75rem] font-semibold tracking-tight">{% t 'account.title' %}</h1>
+  <div class="grid gap-8 md:grid-cols-[220px_1fr]">
+    <nav class="flex gap-1 overflow-x-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-1.5 shadow-[var(--shadow-xs)] md:h-fit md:flex-col md:overflow-visible">
+      {% include "storefront/account/_nav_link.html" with key="dashboard" url_name="storefront:account" label_key="account.dashboard" %}
+      {% include "storefront/account/_nav_link.html" with key="profile" url_name="storefront:account_profile" label_key="account.profile" %}
+      {% include "storefront/account/_nav_link.html" with key="addresses" url_name="storefront:account_addresses" label_key="account.addresses" %}
+      {% include "storefront/account/_nav_link.html" with key="orders" url_name="storefront:account_orders" label_key="account.orders" %}
+      {% include "storefront/account/_nav_link.html" with key="wishlist" url_name="storefront:account_wishlist" label_key="account.wishlist" %}
+      <a href="{% url 'storefront:logout' %}" class="shrink-0 rounded-[var(--radius-sm)] px-3 py-2 text-start text-sm font-medium text-[var(--color-sale)] transition-colors hover:bg-[var(--color-sale)]/8 md:mt-1 md:border-t md:border-[var(--color-border)] md:pt-3">{% t 'auth.logout' %}</a>
+    </nav>
+    <div>{% block acct_body %}{% endblock %}</div>
+  </div>
+</div>
+{% endblock %}

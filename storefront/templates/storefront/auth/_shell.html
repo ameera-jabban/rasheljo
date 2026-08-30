@@ -1,0 +1,16 @@
+{% extends "storefront/base.html" %}
+{% load storefront %}
+{% block title %}{% block shell_title %}{% endblock %} · Dr Rashel Jo{% endblock %}
+{% block content %}
+<div class="mx-auto flex max-w-md flex-col items-center px-4 py-14 md:py-20">
+  <a href="{% url 'storefront:home' %}" class="mb-8" aria-label="Dr Rashel Jo — home">
+    {% if site_settings.logo %}<img src="{{ site_settings.logo.url }}" alt="Dr Rashel Jo" class="h-10 w-auto">{% else %}<span class="font-display text-xl font-semibold">Dr Rashel Jo</span>{% endif %}
+  </a>
+  <div class="w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-sm)] md:p-8">
+    <h1 class="font-display text-2xl font-semibold tracking-tight">{% block heading %}{% endblock %}</h1>
+    <p class="mt-1.5 text-sm text-[var(--color-ink-muted)]">{% block subheading %}{% endblock %}</p>
+    <div class="mt-6">{% block auth_body %}{% endblock %}</div>
+  </div>
+  {% block auth_footer %}{% endblock %}
+</div>
+{% endblock %}

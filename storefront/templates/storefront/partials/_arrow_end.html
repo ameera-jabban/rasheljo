@@ -1,1 +1,3 @@
-{% comment %}Shared "next" arrow — mirrors with text direction. Pass `cls` for extras.{% endcomment %}<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="rtl:-scale-x-100 {{ cls }}"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+{% comment %}Shared "next" arrow — mirrors with text direction. Pass `arrow_cls` for extras
+(a distinct name so an enclosing template's own `cls` context var can't leak in via
+{% include %} and knock the glyph out of alignment).{% endcomment %}<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="inline-block shrink-0 rtl:-scale-x-100 {{ arrow_cls }}"><path d="M3 8h10M9 4l4 4-4 4"/></svg>

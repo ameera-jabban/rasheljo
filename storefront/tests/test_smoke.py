@@ -67,6 +67,35 @@ class TestCartHtmx:
         client.post(reverse("storefront:cart_remove", args=[item.id]))
         assert not CartItem.objects.exists()
 
+    def test_remove_fires_success_toast(self, client, product):
+        import json
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id})
+        item = CartItem.objects.get()
+        r = client.post(reverse("storefront:cart_remove", args=[item.id]),
+                        {"product_id": product.id, "control": "1"})
+        assert json.loads(r["HX-Trigger"]) == {"toast": "Item removed from cart successfully."}
+        assert 'hx-swap-oob="true"' in r.content.decode()  # badge still updates
+
+    def test_remove_toast_is_localized_ar(self, client, product):
+        import json
+        client.post("/ar/_/cart/add/", {"product_id": product.id})
+        item = CartItem.objects.get()
+        r = client.post(f"/ar/_/cart/item/{item.id}/remove/", {"page": "cart"})
+        assert json.loads(r["HX-Trigger"])["toast"] == "تم حذف المنتج من السلة بنجاح."
+
+    def test_remove_missing_item_no_toast(self, client):
+        r = client.post(reverse("storefront:cart_remove", args=[999999]),
+                        {"product_id": 1, "control": "1"})
+        assert "HX-Trigger" not in r or "toast" not in r.get("HX-Trigger", "")
+
+    def test_remove_from_cart_page_updates_body_and_toast(self, client, product):
+        import json
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id})
+        item = CartItem.objects.get()
+        r = client.post(reverse("storefront:cart_remove", args=[item.id]), {"page": "cart"})
+        assert json.loads(r["HX-Trigger"])["toast"] == "Item removed from cart successfully."
+        assert "cart-badge" in r.content.decode()
+
     def test_add_respects_stock(self, client):
         p = ProductFactory(stock=0, price="5.00", badge_type="hot_offer")
         client.post(reverse("storefront:cart_add"), {"product_id": p.id})

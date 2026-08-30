@@ -63,6 +63,7 @@
     "increase": "زيادة الكمية",
     "decrease": "إنقاص الكمية",
     "updateFailed": "تعذّر تحديث السلة",
+    "removedToast": "تم حذف المنتج من السلة بنجاح.",
     "items": "{{count}} منتج",
     "orderSummary": "ملخص الطلب",
     "coupon": "رمز الخصم",

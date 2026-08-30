@@ -1,0 +1,28 @@
+{% extends "storefront/account/_base.html" %}
+{% load storefront %}
+{% block acct_body %}
+{% with field="rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-[var(--color-ink-subtle)] focus:border-[var(--color-brand-primary)] focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15" %}
+<div class="space-y-4" x-data="{ showForm: false }">
+  <div class="flex items-center justify-between">
+    <h2 class="font-display text-lg font-semibold">{% t 'account.addresses' %}</h2>
+    <button type="button" @click="showForm = !showForm" class="text-sm font-medium text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)]" x-text="showForm ? '{% t 'account.cancel' %}' : '+ {% t 'account.addAddress' %}'">+ {% t 'account.addAddress' %}</button>
+  </div>
+
+  <form x-show="showForm" x-cloak method="post" hx-post="{% url 'storefront:account_address_create' %}" hx-target="#address-list" hx-swap="outerHTML"
+    @htmx:after-request="if($event.detail.successful){ showForm = false; $el.reset() }"
+    class="grid gap-2.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-xs)] sm:grid-cols-2">
+    {% csrf_token %}
+    <input required name="name" placeholder="{% t 'account.fullName' %}" class="{{ field }}">
+    <input required name="phone" placeholder="{% t 'account.phone' %}" class="{{ field }}">
+    <input required name="city" placeholder="{% t 'account.city' %}" class="{{ field }}">
+    <input name="area" placeholder="{% t 'account.area' %}" class="{{ field }}">
+    <input required name="address_line" placeholder="{% t 'account.streetAddress' %}" class="{{ field }} sm:col-span-2">
+    <input name="building" placeholder="{% t 'account.building' %}" class="{{ field }}">
+    <input name="apartment" placeholder="{% t 'account.apartment' %}" class="{{ field }}">
+    <button type="submit" class="h-11 rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] text-sm font-semibold text-white transition-colors hover:bg-[var(--color-brand-primary-hover)] sm:col-span-2">{% t 'account.saveAddress' %}</button>
+  </form>
+
+  {% include "storefront/account/_address_list.html" %}
+</div>
+{% endwith %}
+{% endblock %}

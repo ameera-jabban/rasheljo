@@ -1,0 +1,21 @@
+{% load storefront %}{% comment %}
+One filter group in the Shop sidebar — ports FilterSection + FilterOption in
+Shop.tsx. Native radio inputs inside the #shop-filters <form>; changing any one
+fires the form's hx-get. Params: title_en/title_ar, all_en/all_ar (the "no filter"
+option), param (radio name), active (current slug), options (queryset), field
+("name"|"value"), scroll (truthy → cap height).
+{% endcomment %}
+<fieldset class="border-b border-[var(--color-border)] pb-5 last:border-0 last:pb-0">
+  <legend class="mb-2.5 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-ink-muted)]">{% if is_ar %}{{ title_ar }}{% else %}{{ title_en }}{% endif %}</legend>
+  <div class="-mx-1 {% if scroll %}max-h-72 overflow-y-auto{% endif %}">
+    {% for opt in options %}
+    <label class="flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-sm)] px-2 py-1.5 text-sm transition-colors focus-within:ring-2 focus-within:ring-[var(--color-brand-primary)]/40 {% if active == opt.slug %}bg-[var(--color-brand-tint)] font-medium text-[var(--color-brand-primary)]{% else %}text-[var(--color-ink)] hover:bg-[var(--color-bg)]{% endif %}">
+      <input type="radio" name="{{ param }}" value="{{ opt.slug }}" class="peer sr-only" {% if active == opt.slug %}checked{% endif %}>
+      <span aria-hidden="true" class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors {% if active == opt.slug %}border-[var(--color-brand-primary)]{% else %}border-[var(--color-border-strong)] peer-checked:border-[var(--color-brand-primary)]{% endif %}">
+        {% if active == opt.slug %}<span class="h-2 w-2 rounded-full bg-[var(--color-brand-primary)]"></span>{% endif %}
+      </span>
+      <span class="min-w-0 flex-1 truncate">{{ opt|localized:field }}</span>
+    </label>
+    {% endfor %}
+  </div>
+</fieldset>

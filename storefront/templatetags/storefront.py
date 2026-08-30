@@ -9,6 +9,7 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 
 from django import template
+from django.http import QueryDict
 from django.urls import translate_url
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
@@ -122,6 +123,24 @@ def badge_context(badge_type, size="sm"):
         "top": d,
         "left": (wrap_px - d) if is_ar else d,
     }
+
+
+@register.simple_tag(takes_context=True)
+def qs_set(context, key, value):
+    """Current query string with `key` set to `value` (empty/None removes it).
+    Setting anything other than `page` also clears `page` — matches the React
+    Shop's updateFilter(). Returns "?a=1&b=2" or ""."""
+    request = context.get("request")
+    params = request.GET.copy() if request else QueryDict(mutable=True)
+    value = "" if value is None else str(value)
+    if value == "":
+        params.pop(key, None)
+    else:
+        params[key] = value
+    if key != "page":
+        params.pop("page", None)
+    encoded = params.urlencode()
+    return f"?{encoded}" if encoded else ""
 
 
 @register.simple_tag(takes_context=True)
