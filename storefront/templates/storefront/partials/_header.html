@@ -26,21 +26,22 @@
       </nav>
 
       <div class="ms-auto flex items-center gap-1 md:gap-2">
-        {% comment %}Search — an icon that opens a search field as a dropdown panel
-        directly below the header row (the icon row stays visible/clickable). Closes
-        on the X button, outside click, Escape or submit (a full-page GET nav that
-        also resets this Alpine state).{% endcomment %}
+        {% comment %}Search — an icon that opens a search field. On sm+ the field
+        expands inline in the header row (the icon takes its place); on mobile it
+        drops below the row. Either way the other icons keep their place. Closes on
+        the X button, outside click, Escape or submit (a full-page GET nav that also
+        resets this Alpine state).{% endcomment %}
         <div class="flex items-center" @click.outside="searchOpen = false" @keydown.escape.window="searchOpen = false">
           <button type="button" @click="searchOpen = !searchOpen" :aria-expanded="searchOpen" aria-label="{{ search_label }}"
             class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--color-ink-muted)] transition-colors hover:bg-[var(--color-brand-tint)] hover:text-[var(--color-brand-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] active:scale-95"
-            :class="searchOpen ? 'bg-[var(--color-brand-tint)] text-[var(--color-brand-primary)]' : ''">
+            :class="searchOpen ? 'bg-[var(--color-brand-tint)] text-[var(--color-brand-primary)] sm:hidden' : ''">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
               <circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/>
             </svg>
           </button>
           <form action="{{ search_url }}" method="get" role="search"
             :data-open="searchOpen"
-            class="hdr-search-field absolute top-full z-30 mt-2 rounded-full shadow-[var(--shadow-lg)] transition-all duration-200 ease-out ltr:right-4 rtl:left-4"
+            class="hdr-search-field rounded-full transition-all duration-200 ease-out absolute top-full z-30 mt-2 inset-x-4 shadow-[var(--shadow-lg)] sm:static sm:inset-x-auto sm:z-auto sm:mt-0 sm:shadow-none"
             :class="searchOpen ? 'opacity-100' : 'pointer-events-none overflow-hidden opacity-0'">
             <div class="relative">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true" class="pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--color-ink-subtle)] ltr:left-3 rtl:right-3">

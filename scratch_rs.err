@@ -1,0 +1,96 @@
+[30/Aug/2026 13:34:35] "GET /en/ HTTP/1.1" 200 62637
+[30/Aug/2026 13:35:10] "GET /en/ HTTP/1.1" 200 62637
+[30/Aug/2026 13:35:11] "GET /static/storefront/vendor/htmx.min.js HTTP/1.1" 200 50917
+[30/Aug/2026 13:35:12] "GET /static/storefront/css/app.css HTTP/1.1" 200 52507
+[30/Aug/2026 13:35:12] "GET /static/storefront/vendor/alpine.min.js HTTP/1.1" 200 44758
+[30/Aug/2026 13:35:12] "GET /media/site/Untitled-design-2025-12-11T180800.310-scaled.png HTTP/1.1" 200 76618
+[30/Aug/2026 13:35:12] "GET /media/products/DRL-1948-0-l-14-1.jpeg HTTP/1.1" 200 37827
+[30/Aug/2026 13:35:12] "GET /media/products/DRL-1860-0-l-12-1.jpeg HTTP/1.1" 200 39547
+[30/Aug/2026 13:35:12] "GET /media/products/DRL-1736-0-l-14-7.jpeg HTTP/1.1" 200 71295
+[30/Aug/2026 13:35:12] "GET /media/products/DRL-1727-0-l-11.jpeg HTTP/1.1" 200 64688
+[30/Aug/2026 13:35:15] "GET /media/homepage/videos/ES0177-0182.mp4 HTTP/1.1" 200 33517190
+[30/Aug/2026 13:35:15] "GET /media/homepage/videos/dr-rashel-hero-video.mp4 HTTP/1.1" 200 43818239
+[30/Aug/2026 13:35:16] "GET /static/storefront/img/favicon-32x32.png HTTP/1.1" 200 848
+[30/Aug/2026 13:35:17,584] - Broken pipe from ('127.0.0.1', 51296)
+[30/Aug/2026 13:35:18] "GET /ar/ HTTP/1.1" 200 64374
+[30/Aug/2026 13:35:18,767] - Broken pipe from ('127.0.0.1', 58878)
+[30/Aug/2026 13:35:18,773] - Broken pipe from ('127.0.0.1', 63821)
+[30/Aug/2026 13:35:18,790] - Broken pipe from ('127.0.0.1', 61919)
+[30/Aug/2026 13:35:21] "GET /media/homepage/videos/ES0177-0182.mp4 HTTP/1.1" 200 33517190
+[30/Aug/2026 13:35:22] "GET /media/homepage/videos/dr-rashel-hero-video.mp4 HTTP/1.1" 200 43818239
+[30/Aug/2026 13:35:24,153] - Broken pipe from ('127.0.0.1', 62976)
+[30/Aug/2026 13:35:27] "GET /en/ HTTP/1.1" 200 62637
+[30/Aug/2026 13:35:28,070] - Broken pipe from ('127.0.0.1', 50063)
+[30/Aug/2026 13:35:28,082] - Broken pipe from ('127.0.0.1', 58342)
+[30/Aug/2026 13:35:28,093] - Broken pipe from ('127.0.0.1', 52237)
+[30/Aug/2026 13:35:28] "GET /static/storefront/css/app.css HTTP/1.1" 304 0
+[30/Aug/2026 13:35:33] "GET /media/homepage/videos/ES0177-0182.mp4 HTTP/1.1" 200 33517190
+[30/Aug/2026 13:35:33,447] - Broken pipe from ('127.0.0.1', 52436)
+[30/Aug/2026 13:35:33,462] - Broken pipe from ('127.0.0.1', 61538)
+[30/Aug/2026 13:35:33,465] - Broken pipe from ('127.0.0.1', 56428)
+[30/Aug/2026 13:35:33,546] - Broken pipe from ('127.0.0.1', 60027)
+[30/Aug/2026 13:35:39] "GET /api/v1/site-settings/ HTTP/1.1" 200 1150
+[30/Aug/2026 13:35:39] "GET /api/v1/products/?badge=hot_offer&ordering=-created_at HTTP/1.1" 200 52
+[30/Aug/2026 13:35:39] "GET /api/v1/homepage-videos/ HTTP/1.1" 200 1268
+[30/Aug/2026 13:35:45] "GET /api/v1/site-settings/ HTTP/1.1" 200 1150
+[30/Aug/2026 13:35:45] "GET /api/v1/brands/ HTTP/1.1" 200 290
+[30/Aug/2026 13:35:45] "GET /api/v1/products/?badge=hot_offer&ordering=-created_at HTTP/1.1" 200 52
+[30/Aug/2026 13:35:46] "GET /api/v1/products/?badge=last_chance&ordering=-created_at HTTP/1.1" 200 4070
+[30/Aug/2026 13:35:46] "GET /api/v1/products/?badge=bestseller&ordering=-created_at HTTP/1.1" 200 14011
+[30/Aug/2026 13:35:46] "GET /api/v1/account/wishlist/ HTTP/1.1" 401 62
+[30/Aug/2026 13:35:46] "GET /media/products/DRL-1865-0-l-11-3.jpeg HTTP/1.1" 200 53403
+[30/Aug/2026 13:35:46] "GET /media/products/DRL-1817-0-l-11-9.jpeg HTTP/1.1" 200 35906
+[30/Aug/2026 13:35:46] "GET /media/products/DRL-1646-0-l-13-17.jpeg HTTP/1.1" 200 54509
+[30/Aug/2026 13:35:46] "GET /media/products/ES-0187-0-l-29-1.jpeg HTTP/1.1" 200 33723
+[30/Aug/2026 13:35:47] "GET /api/v1/homepage-videos/ HTTP/1.1" 200 1268
+[30/Aug/2026 13:35:47] "GET /api/v1/account/wishlist/ HTTP/1.1" 401 62
+[30/Aug/2026 13:35:48] "GET /en/ HTTP/1.1" 200 62637
+[30/Aug/2026 13:35:48,253] - Broken pipe from ('127.0.0.1', 50573)
+[30/Aug/2026 13:35:48,278] - Broken pipe from ('127.0.0.1', 50995)
+[30/Aug/2026 13:35:48] "GET /static/storefront/css/app.css HTTP/1.1" 304 0
+[30/Aug/2026 13:35:48,572] - Broken pipe from ('127.0.0.1', 56452)
+[30/Aug/2026 13:35:48,603] - Broken pipe from ('127.0.0.1', 62942)
+[30/Aug/2026 13:35:51] "GET /media/homepage/videos/ES0177-0182.mp4 HTTP/1.1" 200 33517190
+[30/Aug/2026 13:35:52] "GET /media/homepage/videos/dr-rashel-hero-video.mp4 HTTP/1.1" 200 43818239
+[30/Aug/2026 13:35:55,644] - Broken pipe from ('127.0.0.1', 63087)
+[30/Aug/2026 13:35:56] "GET /ar/ HTTP/1.1" 200 64374
+[30/Aug/2026 13:35:57,041] - Broken pipe from ('127.0.0.1', 63747)
+[30/Aug/2026 13:35:57,043] - Broken pipe from ('127.0.0.1', 52849)
+[30/Aug/2026 13:35:57,060] - Broken pipe from ('127.0.0.1', 62789)
+[30/Aug/2026 13:35:57,383] - Broken pipe from ('127.0.0.1', 60835)
+[30/Aug/2026 13:35:59,526] - Broken pipe from ('127.0.0.1', 56716)
+[30/Aug/2026 13:35:59,528] - Broken pipe from ('127.0.0.1', 52020)
+[30/Aug/2026 13:36:01] "GET /media/homepage/videos/ES0177-0182.mp4 HTTP/1.1" 200 33517190
+[30/Aug/2026 13:36:02,442] - Broken pipe from ('127.0.0.1', 63716)
+[30/Aug/2026 13:36:02,443] - Broken pipe from ('127.0.0.1', 49675)
+[30/Aug/2026 13:36:02,589] - Broken pipe from ('127.0.0.1', 52877)
+[30/Aug/2026 13:36:02,591] - Broken pipe from ('127.0.0.1', 63707)
+[30/Aug/2026 13:36:05] "GET /api/v1/products/?badge=hot_offer&ordering=-created_at HTTP/1.1" 200 52
+[30/Aug/2026 13:36:05] "GET /api/v1/site-settings/ HTTP/1.1" 200 1150
+[30/Aug/2026 13:36:05] "GET /api/v1/homepage-videos/ HTTP/1.1" 200 1268
+[30/Aug/2026 13:36:05] "GET /api/v1/products/?badge=last_chance&ordering=-created_at HTTP/1.1" 200 4070
+[30/Aug/2026 13:36:05] "GET /api/v1/account/wishlist/ HTTP/1.1" 401 58
+[30/Aug/2026 13:36:06] "GET /api/v1/products/?badge=bestseller&ordering=-created_at HTTP/1.1" 200 14011
+[30/Aug/2026 13:36:06] "GET /api/v1/account/wishlist/ HTTP/1.1" 401 58
+[30/Aug/2026 13:36:06] "GET /api/v1/brands/ HTTP/1.1" 200 290
+[30/Aug/2026 13:36:07] "GET /media/homepage/videos/ES0177-0182.mp4 HTTP/1.1" 200 33517190
+[30/Aug/2026 13:36:07] "GET /media/homepage/videos/dr-rashel-hero-video.mp4 HTTP/1.1" 200 43818239
+[30/Aug/2026 13:36:08] "GET /api/v1/cart/ HTTP/1.1" 200 96
+[30/Aug/2026 13:36:22,569] - Broken pipe from ('127.0.0.1', 61495)
+[30/Aug/2026 13:36:24,579] - Broken pipe from ('127.0.0.1', 54365)
+[30/Aug/2026 13:36:24,688] - Broken pipe from ('127.0.0.1', 57047)
+[30/Aug/2026 13:36:24,690] - Broken pipe from ('127.0.0.1', 50329)
+[30/Aug/2026 13:36:24,690] - Broken pipe from ('127.0.0.1', 54574)
+[30/Aug/2026 13:37:35,284] - Broken pipe from ('127.0.0.1', 51407)
+[30/Aug/2026 13:37:35,309] - Broken pipe from ('127.0.0.1', 50108)
+[30/Aug/2026 13:37:35] "GET /media/homepage/videos/ES0177-0182.mp4 HTTP/1.1" 200 33517190
+[30/Aug/2026 13:37:35] "GET /media/homepage/videos/dr-rashel-hero-video.mp4 HTTP/1.1" 200 43818239
+[30/Aug/2026 13:37:35,551] - Broken pipe from ('127.0.0.1', 54152)
+[30/Aug/2026 13:37:47] "GET /media/homepage/videos/dr-rashel-hero-video.mp4 HTTP/1.1" 200 43818239
+[30/Aug/2026 13:37:55] "GET /en/shop/ HTTP/1.1" 200 157766
+[30/Aug/2026 13:37:55] "GET /static/storefront/css/app.css HTTP/1.1" 200 52507
+[30/Aug/2026 13:37:59] "GET /en/shop/?brand=dr-rashel&ordering= HTTP/1.1" 200 137840
+[30/Aug/2026 13:37:59] "GET /media/products/DRL-1912-0-l-12-3.jpeg HTTP/1.1" 200 51974
+[30/Aug/2026 13:37:59] "GET /media/products/DRL-1954-0-l-13-2-1.jpeg HTTP/1.1" 200 78092
+[30/Aug/2026 13:37:59] "GET /media/products/DRL-1967-0-l-13-3.jpeg HTTP/1.1" 200 40973
+[30/Aug/2026 13:37:59] "GET /media/products/DRL-1913-0-l-13-4.jpeg HTTP/1.1" 200 57896

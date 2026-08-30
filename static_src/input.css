@@ -147,10 +147,15 @@ html[dir="rtl"] .font-display {
 
 /* Header search: an icon that expands into an input. Width is hand-rolled
    (calc() arbitrary values are unreliable through the standalone CLI) — Alpine
-   toggles data-open. Full-width bar below sm, a fixed pill from sm up. */
+   toggles data-open. Full-width dropdown below the row on mobile; an inline
+   pill in the header-row gap from sm up (the toggle icon is hidden there). */
 .hdr-search-field { width: 0; }
-.hdr-search-field[data-open="true"] { width: calc(100% - 2rem); }
+/* Mobile: width comes from the inset-x-4 anchors (16px each side) — no calc. */
+.hdr-search-field[data-open="true"] { width: auto; }
 @media (min-width: 40rem) {
+  .hdr-search-field[data-open="true"] { width: 18rem; }
+}
+@media (min-width: 64rem) {
   .hdr-search-field[data-open="true"] { width: 20rem; }
 }
 
