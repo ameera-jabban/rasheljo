@@ -41,6 +41,18 @@ class TestPolicyDefaults:
             assert p.body_en == "" and p.body_ar == ""
             assert p.is_active is True
 
+    def test_default_policies_have_arabic_titles(self):
+        # Short UI labels, not legal content — filled by migration 0005 so the
+        # /ar/ storefront doesn't show an English heading/breadcrumb.
+        expected = {
+            "privacy-policy": "سياسة الخصوصية",
+            "terms-conditions": "الشروط والأحكام",
+            "return-policy": "سياسة الإرجاع",
+            "shipping-policy": "سياسة الشحن",
+        }
+        for slug, title_ar in expected.items():
+            assert Policy.objects.get(slug=slug).title_ar == title_ar
+
 
 class TestPolicyPublicEndpoints:
     def test_list_returns_only_active_slug_and_title(self):

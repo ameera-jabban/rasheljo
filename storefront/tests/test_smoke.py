@@ -42,6 +42,19 @@ class TestPagesRender:
         html = client.get("/en/").content.decode()
         assert "/ar/" in html  # header language toggle
 
+    def test_header_search_is_collapsible(self, client):
+        html = client.get("/en/").content.decode()
+        # the expanding search: one search form, Alpine-toggled, GET to /search/
+        assert 'x-data="{ searchOpen: false }"' in html
+        assert 'hdr-search-field' in html
+        assert 'action="/en/search/"' in html
+        assert html.count('role="search"') == 1  # not the old dual (desktop + mobile) forms
+
+    def test_header_search_form_localized_ar(self, client):
+        html = client.get("/ar/").content.decode()
+        assert 'action="/ar/search/"' in html
+        assert "بحث" in html  # nav.search placeholder/label
+
 
 class TestCartHtmx:
     def test_add_creates_cart_item_and_returns_stepper(self, client, product):
