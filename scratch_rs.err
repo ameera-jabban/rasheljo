@@ -1,0 +1,27 @@
+[30/Aug/2026 09:41:04] "GET /admin/login/ HTTP/1.1" 200 20872
+[30/Aug/2026 09:41:11] "POST /admin/login/ HTTP/1.1" 302 0
+[30/Aug/2026 09:41:21] "GET /admin/ HTTP/1.1" 200 89060
+[30/Aug/2026 09:41:25] "GET /admin/notify/notification/ HTTP/1.1" 404 9974
+[30/Aug/2026 09:43:53] "GET /en/ HTTP/1.1" 200 61505
+[30/Aug/2026 09:43:53] "GET /static/storefront/css/app.css HTTP/1.1" 304 0
+[30/Aug/2026 09:43:54,775] - Broken pipe from ('127.0.0.1', 56846)
+[30/Aug/2026 09:43:54,775] - Broken pipe from ('127.0.0.1', 64030)
+[30/Aug/2026 09:43:55] "GET /media/homepage/videos/ES0177-0182.mp4 HTTP/1.1" 200 33517190
+[30/Aug/2026 09:43:55] "GET /media/homepage/videos/dr-rashel-hero-video.mp4 HTTP/1.1" 200 43818239
+[30/Aug/2026 09:43:55,686] - Broken pipe from ('127.0.0.1', 64664)
+[30/Aug/2026 09:44:05] "GET /admin/pages/add/home/homepage/3/ HTTP/1.1" 302 0
+[30/Aug/2026 09:44:06] "GET /admin/login/?next=/admin/pages/add/home/homepage/3/ HTTP/1.1" 200 20911
+[30/Aug/2026 09:44:06,845] - Broken pipe from ('127.0.0.1', 54794)
+[30/Aug/2026 09:44:06,846] - Broken pipe from ('127.0.0.1', 53859)
+[30/Aug/2026 09:44:06,847] - Broken pipe from ('127.0.0.1', 57192)
+[30/Aug/2026 09:44:07] "GET /favicon.ico HTTP/1.1" 404 5067
+[30/Aug/2026 09:44:22] "POST /admin/login/?next=/admin/pages/add/home/homepage/3/ HTTP/1.1" 302 0
+[30/Aug/2026 09:44:23] "GET /admin/pages/add/home/homepage/3/ HTTP/1.1" 404 9992
+[30/Aug/2026 09:44:38] "GET /admin/ HTTP/1.1" 200 98496
+[30/Aug/2026 09:45:02] "GET /admin/catalog/product/?stock_level=out HTTP/1.1" 200 117767
+[30/Aug/2026 09:45:03] "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+[30/Aug/2026 09:45:14] "GET /admin/catalog/ HTTP/1.1" 200 57429
+[30/Aug/2026 09:45:26] "GET /admin/ HTTP/1.1" 200 98496
+[30/Aug/2026 09:45:46] "GET /admin/auth/group/ HTTP/1.1" 200 59285
+[30/Aug/2026 09:45:47] "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+[30/Aug/2026 09:46:09] "GET /admin/ HTTP/1.1" 200 98496

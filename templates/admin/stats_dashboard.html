@@ -1,0 +1,81 @@
+{% load i18n %}
+{% if stats_dashboard %}
+<section class="mb-10" aria-label="{% trans 'Store analytics' %}">
+
+  {# Revenue #}
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    {% for r in stats_dashboard.revenue %}
+    <div class="rounded-default border border-base-200 bg-white p-6 shadow-xs dark:border-base-800 dark:bg-base-900">
+      <p class="text-xs font-medium uppercase text-base-500 dark:text-base-400">{{ r.label }}</p>
+      <p class="mt-2 text-2xl font-semibold text-font-important-light dark:text-font-important-dark">
+        JOD {{ r.value|floatformat:2 }}
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# Headline counts #}
+  <div class="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+    {% for c in stats_dashboard.counts %}
+    <{% if c.url %}a href="{{ c.url }}"{% else %}div{% endif %}
+      class="block rounded-default border border-base-200 bg-white p-5 shadow-xs dark:border-base-800 dark:bg-base-900{% if c.url %} transition-colors hover:border-primary-500{% endif %}">
+      <p class="text-xs font-medium uppercase text-base-500 dark:text-base-400">{{ c.label }}</p>
+      <p class="mt-2 text-xl font-semibold text-font-important-light dark:text-font-important-dark">
+        {% if c.money %}JOD {{ c.value|floatformat:2 }}{% else %}{{ c.value }}{% endif %}
+      </p>
+    </{% if c.url %}a{% else %}div{% endif %}>
+    {% endfor %}
+  </div>
+
+  <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+
+    {# Stock alerts — actionable links into the Product changelist #}
+    <div class="rounded-default border border-base-200 bg-white p-6 shadow-xs dark:border-base-800 dark:bg-base-900">
+      <h2 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">{% trans "Stock alerts" %}</h2>
+      <div class="mt-4 space-y-2">
+        {% for s in stats_dashboard.stock_alerts %}
+        <a href="{{ s.url }}"
+           class="flex items-center justify-between rounded-default border border-base-200 px-3 py-2 text-sm transition-colors hover:border-primary-500 dark:border-base-800">
+          <span class="flex items-center gap-2 text-base-700 dark:text-base-300">
+            <span class="inline-block h-2 w-2 rounded-full {% if s.tone == 'danger' %}bg-red-500{% else %}bg-orange-500{% endif %}"></span>
+            {{ s.label }}
+          </span>
+          <span class="font-semibold text-font-important-light dark:text-font-important-dark">{{ s.value }}&nbsp;&rsaquo;</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Orders by status #}
+    <div class="rounded-default border border-base-200 bg-white p-6 shadow-xs dark:border-base-800 dark:bg-base-900">
+      <h2 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">{% trans "Orders by status" %}</h2>
+      <div class="mt-4 space-y-2">
+        {% for o in stats_dashboard.orders_by_status %}
+        <a href="{{ o.url }}" class="flex items-center justify-between rounded px-2 py-1 text-sm text-base-700 transition-colors hover:bg-base-100 dark:text-base-300 dark:hover:bg-base-800">
+          <span>{{ o.status|title }}</span>
+          <span class="font-semibold text-font-important-light dark:text-font-important-dark">{{ o.count }}</span>
+        </a>
+        {% empty %}
+        <p class="text-sm text-base-500 dark:text-base-400">{% trans "No orders yet." %}</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Top sellers, last 30 days, by units #}
+    <div class="rounded-default border border-base-200 bg-white p-6 shadow-xs dark:border-base-800 dark:bg-base-900">
+      <h2 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">{% trans "Top sellers · 30 days" %}</h2>
+      <div class="mt-4 space-y-2">
+        {% for p in stats_dashboard.top_products %}
+        <a href="{{ p.url }}" class="flex items-center justify-between gap-3 rounded px-2 py-1 text-sm text-base-700 transition-colors hover:bg-base-100 dark:text-base-300 dark:hover:bg-base-800">
+          <span class="truncate">{{ p.name }}</span>
+          <span class="shrink-0 font-semibold text-font-important-light dark:text-font-important-dark">{{ p.units }}</span>
+        </a>
+        {% empty %}
+        <p class="text-sm text-base-500 dark:text-base-400">{% trans "No paid sales in the last 30 days." %}</p>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endif %}

@@ -67,7 +67,11 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        # Project-level templates. Currently only templates/admin/index.html, which
+        # overrides the Django Admin index to add the stats dashboard above the
+        # normal app list (the filesystem loader runs before app_directories, so
+        # this wins over unfold's bundled admin/index.html).
+        "DIRS": [BASE_DIR / "templates"],
         # Explicit loaders (not APP_DIRS) so the cached.Loader can wrap them even
         # in DEBUG — the storefront's product cards nest ~6 {% include %}s each and
         # a 24-card grid re-compiling every partial per request is ~1.5s of pure
@@ -267,6 +271,10 @@ UNFOLD = {
     "SITE_URL": "/",
     "SITE_SYMBOL": "spa",
     "SITE_LOGO": _admin_site_logo,
+    # Stats/analytics section on the /admin/ index page. Reuses the reports
+    # aggregation (see admin_reports/dashboard.py); rendered by
+    # templates/admin/index.html.
+    "DASHBOARD_CALLBACK": "admin_reports.dashboard.dashboard_callback",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
     "THEME": None,  # None = respect the OS/browser preference + expose the toggle

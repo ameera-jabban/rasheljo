@@ -107,6 +107,32 @@ class SalesOverTimeView(_StaffView):
         return Response({"range": key, "bucket": bucket, "series": series})
 
 
+def top_products_data(start, limit=10):
+    """Best sellers (paid orders only) since ``start``, by units and by revenue.
+    Shared by the REST endpoint and the Django Admin dashboard."""
+    base = (
+        OrderItem.objects.filter(order__status__in=PAID_STATUSES, order__created_at__gte=start)
+        .values("product_id", "product_name")
+        .annotate(units=Sum("quantity"), revenue=Sum(_line_total))
+    )
+
+    def shape(qs):
+        return [
+            {
+                "product_id": r["product_id"],
+                "name": r["product_name"],
+                "units": r["units"] or 0,
+                "revenue": _money(r["revenue"]),
+            }
+            for r in qs
+        ]
+
+    return {
+        "by_units": shape(base.order_by("-units", "-revenue")[:limit]),
+        "by_revenue": shape(base.order_by("-revenue", "-units")[:limit]),
+    }
+
+
 class TopProductsView(_StaffView):
     """GET /api/v1/admin/reports/top-products/?range=...&limit=10
     Best sellers by units and by revenue over the range."""
@@ -117,31 +143,7 @@ class TopProductsView(_StaffView):
             limit = max(1, min(50, int(request.query_params.get("limit", 10))))
         except ValueError:
             limit = 10
-
-        base = (
-            OrderItem.objects.filter(order__status__in=PAID_STATUSES, order__created_at__gte=start)
-            .values("product_id", "product_name")
-            .annotate(units=Sum("quantity"), revenue=Sum(_line_total))
-        )
-
-        def shape(qs):
-            return [
-                {
-                    "product_id": r["product_id"],
-                    "name": r["product_name"],
-                    "units": r["units"] or 0,
-                    "revenue": _money(r["revenue"]),
-                }
-                for r in qs
-            ]
-
-        return Response(
-            {
-                "range": key,
-                "by_units": shape(base.order_by("-units", "-revenue")[:limit]),
-                "by_revenue": shape(base.order_by("-revenue", "-units")[:limit]),
-            }
-        )
+        return Response({"range": key, **top_products_data(start, limit)})
 
 
 class RevenueByBrandView(_StaffView):
@@ -194,41 +196,45 @@ class RevenueByCategoryView(_StaffView):
         return Response({"range": key, "categories": data})
 
 
+def inventory_data():
+    """Stock value + the actual low / out-of-stock products to act on. Shared by
+    the REST endpoint and the Django Admin dashboard."""
+    active = Product.objects.filter(is_active=True)
+    total_value = active.aggregate(
+        v=Sum(
+            ExpressionWrapper(
+                F("price") * F("stock"),
+                output_field=DecimalField(max_digits=16, decimal_places=2),
+            )
+        )
+    )["v"]
+
+    low = active.filter(stock__gt=0, stock__lt=LOW_STOCK_THRESHOLD).order_by("stock", "name_en")
+    out = active.filter(stock=0).order_by("name_en")
+
+    def shape(qs):
+        return [
+            {"id": p.id, "sku": p.sku, "name": p.name_en, "stock": p.stock, "price": _money(p.price)}
+            for p in qs.only("id", "sku", "name_en", "stock", "price")
+        ]
+
+    return {
+        "total_inventory_value": _money(total_value),
+        "active_products": active.count(),
+        "low_stock_threshold": LOW_STOCK_THRESHOLD,
+        "low_stock_count": low.count(),
+        "out_of_stock_count": out.count(),
+        "low_stock_products": shape(low),
+        "out_of_stock_products": shape(out),
+    }
+
+
 class InventoryReportView(_StaffView):
     """GET /api/v1/admin/reports/inventory/
     Total stock value + the actual low/out-of-stock products to act on."""
 
     def get(self, request):
-        active = Product.objects.filter(is_active=True)
-        total_value = active.aggregate(
-            v=Sum(
-                ExpressionWrapper(
-                    F("price") * F("stock"),
-                    output_field=DecimalField(max_digits=16, decimal_places=2),
-                )
-            )
-        )["v"]
-
-        low = active.filter(stock__gt=0, stock__lt=LOW_STOCK_THRESHOLD).order_by("stock", "name_en")
-        out = active.filter(stock=0).order_by("name_en")
-
-        def shape(qs):
-            return [
-                {"id": p.id, "sku": p.sku, "name": p.name_en, "stock": p.stock, "price": _money(p.price)}
-                for p in qs.only("id", "sku", "name_en", "stock", "price")
-            ]
-
-        return Response(
-            {
-                "total_inventory_value": _money(total_value),
-                "active_products": active.count(),
-                "low_stock_threshold": LOW_STOCK_THRESHOLD,
-                "low_stock_count": low.count(),
-                "out_of_stock_count": out.count(),
-                "low_stock_products": shape(low),
-                "out_of_stock_products": shape(out),
-            }
-        )
+        return Response(inventory_data())
 
 
 class OrderSummaryView(_StaffView):

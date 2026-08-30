@@ -1,0 +1,25 @@
+{% extends "admin/base.html" %}
+{% comment %}
+Project override of the Django Admin index. Adds the stats dashboard
+(admin_reports.dashboard.dashboard_callback → `stats_dashboard`) above the
+standard app/model list, which is otherwise rendered exactly as unfold does it.
+{% endcomment %}
+{% load i18n %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+    {% include "admin/stats_dashboard.html" %}
+
+    <div class="flex flex-col lg:flex-row lg:gap-8">
+        <div class="grow">
+            {% include "unfold/helpers/app_list_default.html" %}
+        </div>
+
+        {% include "unfold/helpers/history.html" %}
+    </div>
+{% endblock %}
