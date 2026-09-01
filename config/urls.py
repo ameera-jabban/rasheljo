@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
-from django.conf.urls.static import static
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.views.static import serve
 
 from .health import health_check
 from .seo import robots_txt, sitemap_xml
@@ -36,5 +36,17 @@ urlpatterns += i18n_patterns(
     prefix_default_language=True,
 )
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve user-uploaded media (product images, homepage videos, site logo) in every
+# environment, not just DEBUG. Django's built-in `static()` helper returns nothing
+# when DEBUG=False, which is why media 404s in production and forced DEBUG=True as
+# a workaround — a far worse trade (stack traces + settings exposed on any error).
+#
+# `django.views.static.serve` is Django-documented as NOT for high-traffic use:
+# it's synchronous, unbuffered, and sets no cache headers. It's an acceptable
+# stopgap at this project's current traffic, NOT a long-term answer. The planned
+# fix is a dedicated storage backend (django-storages → Cloudflare R2 / S3; the
+# hook already exists in config/settings_production.py behind MEDIA_STORAGE_BACKEND),
+# after which this route should be removed.
+urlpatterns += [
+    re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
+]

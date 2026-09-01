@@ -23,3 +23,6 @@ class UserAdmin(DjangoUserAdmin, ModelAdmin):
 class AddressAdmin(ModelAdmin):
     list_display = ("user", "name", "city", "is_default")
     list_filter = ("city", "is_default")
+    list_select_related = ("user",)          # `user` column was 1 query/row
+    autocomplete_fields = ("user",)          # was a <select> of every user
+    search_fields = ("name", "city", "user__email", "user__first_name", "user__last_name")

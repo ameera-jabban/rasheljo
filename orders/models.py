@@ -34,6 +34,14 @@ class Order(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            # admin list_filter + date_hierarchy, admin_reports (orders-by-status,
+            # sales-over-time), and the storefront order history all filter/sort
+            # on these; unindexed today.
+            models.Index(fields=["status"]),
+            models.Index(fields=["-created_at"]),
+            models.Index(fields=["user", "status"]),
+        ]
 
     ALLOWED_TRANSITIONS = {
         "draft": {"pending", "cancelled"},

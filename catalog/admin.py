@@ -47,8 +47,10 @@ class ProductVariantInline(TabularInline):
 @admin.register(Product)
 class ProductAdmin(ModelAdmin):
     list_display = ("sku", "name_en", "brand", "category", "price", "sale_price", "stock", "badge_type", "is_active", "ar_machine_translated")
+    list_select_related = ("brand", "category")  # `brand` + `category` columns were 2 queries/row (~200 on a full page)
     list_filter = ("brand", "category", "badge_type", "is_active", "ar_machine_translated", StockLevelFilter)
     search_fields = ("sku", "name_en", "name_ar")
+    autocomplete_fields = ("category",)  # 60 categories in a <select> on every change form
     inlines = [ProductImageInline, ProductVariantInline]
     prepopulated_fields = {"slug": ("name_en",)}
     # Render the `attributes` M2M as a checkbox list rather than a <select multiple>.
@@ -63,13 +65,17 @@ class ProductAdmin(ModelAdmin):
 class BrandAdmin(ModelAdmin):
     list_display = ("name_en", "name_ar", "slug", "is_active", "ar_machine_translated")
     list_filter = ("is_active", "ar_machine_translated")
+    search_fields = ("name_en", "name_ar", "slug")  # also the autocomplete source for ProductAdmin
     prepopulated_fields = {"slug": ("name_en",)}
 
 
 @admin.register(Category)
 class CategoryAdmin(ModelAdmin):
     list_display = ("name_en", "name_ar", "slug", "parent", "is_active", "ar_machine_translated")
+    list_select_related = ("parent",)  # `parent` column was 1 query/row
     list_filter = ("is_active", "ar_machine_translated", "parent")
+    search_fields = ("name_en", "name_ar", "slug")  # also the autocomplete source for ProductAdmin
+    autocomplete_fields = ("parent",)
     prepopulated_fields = {"slug": ("name_en",)}
 
 

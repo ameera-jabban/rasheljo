@@ -13,7 +13,7 @@
   {% if hero and hero_src %}
     <a href="{{ hero_link }}" class="group block h-full">
       <div class="relative h-full w-full overflow-hidden bg-[var(--color-brand-secondary)]">
-        <video class="absolute inset-0 h-full w-full object-cover" src="{{ hero_src }}" {% if hero.poster_image %}poster="{{ hero.poster_image.url }}"{% endif %} autoplay muted loop playsinline preload="metadata" aria-hidden="true" tabindex="-1"></video>
+        <video class="absolute inset-0 h-full w-full object-cover" data-src="{{ hero_src }}" {% if hero.poster_image %}poster="{{ hero.poster_image.url }}"{% endif %} muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
         <div class="absolute inset-0 flex flex-col justify-center p-6 pb-8 text-start text-white md:p-10 md:pb-12" style="background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0) 60%)">
           <div class="max-w-xl">
             <h1 class="font-display text-3xl font-semibold leading-tight tracking-tight md:text-5xl" style="text-shadow: 0 1px 3px rgba(0,0,0,0.4)">{% if is_ar and hero.title_ar %}{{ hero.title_ar }}{% elif hero.title_en %}{{ hero.title_en }}{% else %}{{ hero_heading }}{% endif %}</h1>
@@ -62,4 +62,37 @@
 
 {% include "storefront/partials/_product_rail.html" with title=t_last_chance products=last_chance view_all_qs="?badge=last_chance" %}
 {% if section_3 %}{% include "storefront/partials/_section_video_banner.html" with video=section_3 src=section_3_src %}{% endif %}
+{% endblock %}
+
+{% block body_end %}
+{{ block.super }}
+{% comment %}
+  Defer homepage background videos: each <video> carries data-src (no src) so the
+  browser downloads zero video bytes on load. This observer swaps in the real src
+  and starts muted playback only when the video is about to enter the viewport,
+  keeping the old "ambient autoplay" look without the upfront transfer.
+{% endcomment %}
+<script>
+  (function () {
+    var vids = document.querySelectorAll("video[data-src]");
+    if (!vids.length) return;
+    function load(v) {
+      if (!v.dataset.src) return;
+      v.src = v.dataset.src;
+      delete v.dataset.src;
+      var p = v.play();
+      if (p && p.catch) p.catch(function () {});  // autoplay-blocked: poster stays
+    }
+    if (!("IntersectionObserver" in window)) {
+      vids.forEach(load);
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { load(e.target); io.unobserve(e.target); }
+      });
+    }, { rootMargin: "200px" });
+    vids.forEach(function (v) { io.observe(v); });
+  })();
+</script>
 {% endblock %}

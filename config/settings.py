@@ -195,13 +195,38 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+def _redis_db(url: str, db: int) -> str:
+    """Return ``url`` pointed at Redis logical DB ``db`` (replacing any existing
+    trailing ``/<n>``, preserving a ``?query``)."""
+    import re
+
+    pre, sep, query = url.partition("?")
+    pre = re.sub(r"/\d+$", "", pre.rstrip("/"))
+    return f"{pre}/{db}" + (sep + query if sep else "")
+
+
+# Django's cache backend shares the Redis server with Celery but uses a separate
+# logical DB (…/1, not the broker's …/0) so a cache flush can't touch the task
+# queue. IGNORE_EXCEPTIONS keeps the site serving (cache simply misses, falls
+# through to the DB) if Redis is briefly unreachable — the storefront read paths
+# in storefront/services.py rely on that.
+CACHE_REDIS_URL = env("CACHE_REDIS_URL", default="") or _redis_db(REDIS_URL, 1)
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": REDIS_URL,
-        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "LOCATION": CACHE_REDIS_URL,
+        "KEY_PREFIX": "drj",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            # A Redis blip must never 500 the storefront: fall through to the DB.
+            # The /api/v1/health/ check probes Redis separately for visibility, so
+            # per-call exception logging here would just flood the log during an
+            # outage without adding signal.
+            "IGNORE_EXCEPTIONS": True,
+        },
     }
 }
+DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = False
 
 # --- Email ------------------------------------------------------------------
 # Every EMAIL_* value is read HERE (not only in settings_production) so outbound
@@ -264,6 +289,14 @@ def _admin_site_logo(request):
         return None
 
 
+def _static(path):
+    """Deferred {% static %} for the UNFOLD config (settings import too early to
+    call staticfiles storage at module load)."""
+    from django.templatetags.static import static
+
+    return lambda request: static(path)
+
+
 UNFOLD = {
     "SITE_TITLE": "Dr Rashel Jo Admin",
     "SITE_HEADER": "Dr Rashel Jo",
@@ -271,6 +304,17 @@ UNFOLD = {
     "SITE_URL": "/",
     "SITE_SYMBOL": "spa",
     "SITE_LOGO": _admin_site_logo,
+    # Same favicon as the Django-templates storefront (storefront/base.html) so
+    # the /admin/ browser tab matches. unfold owns admin/base_site.html, so this
+    # is set via unfold's own config rather than a template override.
+    "SITE_FAVICONS": [
+        {"rel": "icon", "sizes": "32x32", "type": "image/png",
+         "href": _static("storefront/img/favicon-32x32.png")},
+        {"rel": "icon", "sizes": "192x192", "type": "image/png",
+         "href": _static("storefront/img/favicon-192x192.png")},
+        {"rel": "apple-touch-icon", "sizes": "180x180", "type": "image/png",
+         "href": _static("storefront/img/favicon-180x180.png")},
+    ],
     # Stats/analytics section on the /admin/ index page. Reuses the reports
     # aggregation (see admin_reports/dashboard.py); rendered by
     # templates/admin/index.html.

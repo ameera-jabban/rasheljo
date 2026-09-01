@@ -318,7 +318,7 @@ def _shop(request, *, landing, slug=None):
         skin_type = services.get_skin_type(slug) or _raise404()
 
     q = (request.GET.get("q") or "").strip()
-    qs, applied = services.filtered_products(request.GET, landing=landing, landing_slug=slug)
+    qs, applied = services.shop_products(request.GET, landing=landing, landing_slug=slug)
 
     paginator = Paginator(qs, services.PAGE_SIZE)
     try:

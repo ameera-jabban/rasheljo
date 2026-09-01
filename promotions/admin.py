@@ -14,5 +14,7 @@ class CouponAdmin(ModelAdmin):
 @admin.register(Promotion)
 class PromotionAdmin(ModelAdmin):
     list_display = ("name", "slug", "is_active", "starts_at", "ends_at")
-    filter_horizontal = ("products",)
+    # filter_horizontal rendered every one of the ~460 products as an <option>
+    # (twice) on each change page; autocomplete fetches on demand instead.
+    autocomplete_fields = ("products",)
     prepopulated_fields = {"slug": ("name",)}

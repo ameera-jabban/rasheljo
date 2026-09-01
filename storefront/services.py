@@ -21,6 +21,11 @@ from content.models import HomepageVideo, Policy, SiteSettings
 # types / site settings change rarely — cache them per-process for a minute so a
 # page render isn't 4 extra round-trips. `--noreload` keeps this warm; a server
 # restart or the 60s TTL picks up edits.
+#
+# Admin edits that must show up immediately (not after the TTL) invalidate their
+# key explicitly — see storefront/signals.py. NOTE: `_cache` is per-process, so
+# under a multi-worker gunicorn deploy a signal only clears the worker that
+# handled the save; the other workers still serve stale data until the 60s TTL.
 _TTL = 60
 _cache: dict = {}
 
@@ -33,6 +38,75 @@ def _cached(key, producer):
     value = producer()
     _cache[key] = (now + _TTL, value)
     return value
+
+
+def invalidate(*keys):
+    """Drop cached entries so the next call re-queries. Called from signal
+    handlers when an admin edits the underlying reference data."""
+    for key in keys:
+        _cache.pop(key, None)
+
+
+# --- Redis-backed cache for catalog read paths ------------------------------
+# Homepage rails and product-detail pages are the storefront's hottest reads and
+# each is several DB round-trips (join brand/category, prefetch images, ratings
+# aggregate). Cache the materialised objects in Redis (django.core.cache).
+#
+# Invalidation is generation-based: `sf:catgen` is one integer bumped on ANY
+# catalog write (see catalog/signals.py) and embedded in every key, so a write
+# instantly makes all prior entries unreachable — no key registry, no
+# delete_pattern, identical behaviour on Redis and the locmem cache used in
+# tests. Stale entries just age out via the TTL.
+#
+# The cache is configured with IGNORE_EXCEPTIONS, so if Redis is down every call
+# here simply misses and hits the DB — same graceful degradation as `_cached`.
+_CATALOG_TTL = 300  # 5 min ceiling; catalog writes invalidate sooner via the gen
+
+
+def _catalog_gen() -> int:
+    from django.core.cache import cache
+
+    try:
+        gen = cache.get("sf:catgen")
+        if gen is None:
+            cache.add("sf:catgen", 1, None)  # None timeout = never expire
+            gen = cache.get("sf:catgen") or 1
+        return int(gen)
+    except Exception:
+        return 0  # cache unavailable — stable sentinel so reads just miss
+
+
+def bump_catalog_gen() -> None:
+    """Invalidate every cached catalog read. Called from catalog signal handlers
+    on Product / ProductImage / Brand / Category save + delete."""
+    from django.core.cache import cache
+
+    try:
+        cache.incr("sf:catgen")
+    except ValueError:  # key missing/expired
+        cache.set("sf:catgen", 1, None)
+    except Exception:
+        pass
+
+
+def _catalog_cached(suffix: str, producer):
+    from django.core.cache import cache
+
+    key = f"sf:cat:{_catalog_gen()}:{suffix}"
+    try:
+        hit = cache.get(key)
+        if hit is not None:
+            return hit
+    except Exception:
+        return producer()
+    value = producer()
+    if value is not None:  # don't cache misses (e.g. unknown product slug)
+        try:
+            cache.set(key, value, _CATALOG_TTL)
+        except Exception:
+            pass
+    return value
+
 
 PAGE_SIZE = 24
 BADGE_LABEL_KEYS = {
@@ -247,7 +321,10 @@ def primary_image_url(product) -> str | None:
 
 
 def rail_products(badge: str, limit: int = 4):
-    return list(products_base().filter(badge_type=badge).order_by("-created_at")[:limit])
+    return _catalog_cached(
+        f"rail:{badge}:{limit}",
+        lambda: list(products_base().filter(badge_type=badge).order_by("-created_at")[:limit]),
+    )
 
 
 def filtered_products(query_params, *, landing=None, landing_slug=None):
@@ -287,6 +364,28 @@ def filtered_products(query_params, *, landing=None, landing_slug=None):
     return qs, data
 
 
+_SHOP_FILTER_KEYS = (
+    "q", "brand", "category", "skin_type", "badge",
+    "min_price", "max_price", "in_stock", "ordering", "page",
+)
+
+
+def shop_products(query_params, *, landing=None, landing_slug=None):
+    """Like `filtered_products`, but caches the *bare* landing pages — plain
+    /shop and the brand / category / skin-type nav targets with no user filters
+    or search, where the same key is requested over and over. Anything with a
+    filter, a search term or a page number falls straight through to the DB
+    (the combinatorial tail has a near-zero cache hit rate). Returns
+    (list_or_queryset, applied) — a list is fine for Paginator."""
+    qs, applied = filtered_products(query_params, landing=landing, landing_slug=landing_slug)
+    bare = landing in ("brand", "category", "skin-type", "shop") and not any(
+        k in query_params for k in _SHOP_FILTER_KEYS
+    )
+    if not bare:
+        return qs, applied
+    return _catalog_cached(f"shop:{landing}:{landing_slug}", lambda: list(qs)), applied
+
+
 def brands():
     return _cached("brands", lambda: list(Brand.objects.filter(is_active=True).order_by("name_en")))
 
@@ -315,16 +414,22 @@ def get_skin_type(slug):
 
 
 def get_product(slug):
-    return products_base().prefetch_related("attributes", "variants").filter(slug=slug).first()
+    return _catalog_cached(
+        f"pdp:{slug}",
+        lambda: products_base().prefetch_related("attributes", "variants").filter(slug=slug).first(),
+    )
 
 
 def recommendations(product, limit=8):
-    qs = products_base().exclude(id=product.id)
-    if product.category_id:
-        same_cat = qs.filter(category_id=product.category_id)
-        if same_cat.exists():
-            return list(same_cat[:limit])
-    return list(qs.filter(brand_id=product.brand_id)[:limit])
+    def _build():
+        qs = products_base().exclude(id=product.id)
+        if product.category_id:
+            same_cat = qs.filter(category_id=product.category_id)
+            if same_cat.exists():
+                return list(same_cat[:limit])
+        return list(qs.filter(brand_id=product.brand_id)[:limit])
+
+    return _catalog_cached(f"recs:{product.id}:{limit}", _build)
 
 
 def search_everything(q: str):
