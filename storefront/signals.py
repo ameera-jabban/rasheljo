@@ -1,9 +1,10 @@
-"""Cache invalidation for the storefront's in-process reference-data cache
+"""Cache invalidation for the storefront's shared (Redis) reference-data cache
 (see storefront/services.py).
 
 Without this, editing a HomepageVideo or SiteSettings in the Django Admin does
 not change the storefront until the 60s TTL expires — `homepage_videos_by_slot()`
-and `get_site_settings()` are served from `services._cache`.
+and `get_site_settings()` are served from the `sf:ref:*` cache. `services.invalidate`
+does a `cache.delete`, so every gunicorn worker sees the eviction immediately.
 """
 from __future__ import annotations
 

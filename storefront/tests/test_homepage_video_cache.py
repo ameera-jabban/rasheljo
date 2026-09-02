@@ -1,6 +1,7 @@
 """Regression: toggling HomepageVideo.is_active / sort_order in the admin must
-change the homepage without waiting for the 60s in-process cache TTL."""
+change the homepage without waiting for the 60s reference-data cache TTL."""
 import pytest
+from django.core.cache import cache
 from django.urls import reverse
 
 from content.models import HomepageVideo
@@ -18,7 +19,7 @@ class TestHomepageVideoActiveToggle:
         v = HomepageVideo.objects.create(
             slot="section_2", is_active=True, video_url="https://cdn.example.com/s2.mp4"
         )
-        assert "s2.mp4" in _home(client)  # primes services._cache
+        assert "s2.mp4" in _home(client)  # primes the sf:ref:homepage_videos cache
 
         v.is_active = False
         v.save()  # post_save signal must evict "homepage_videos"
@@ -55,7 +56,19 @@ class TestHomepageVideoActiveToggle:
         v.delete()
         assert "gone.mp4" not in _home(client)
 
-    def test_invalidate_helper_drops_the_key(self):
-        services._cache["homepage_videos"] = (float("inf"), {"sentinel": True})
+    def test_cached_helper_reads_and_writes_the_shared_cache(self):
+        calls = []
+
+        def producer():
+            calls.append(1)
+            return ["value"]
+
+        assert services._cached("demo_key", producer) == ["value"]
+        assert services._cached("demo_key", producer) == ["value"]  # served from cache
+        assert len(calls) == 1
+        assert cache.get("sf:ref:demo_key") == ["value"]  # namespaced, in shared cache
+
+    def test_invalidate_helper_deletes_the_shared_key(self):
+        cache.set("sf:ref:homepage_videos", {"sentinel": True}, 60)
         services.invalidate("homepage_videos")
-        assert "homepage_videos" not in services._cache
+        assert cache.get("sf:ref:homepage_videos") is None

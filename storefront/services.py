@@ -7,44 +7,57 @@ The DRF serializers/viewsets stay untouched and parallel.
 """
 from __future__ import annotations
 
-import time
-
 from django.db.models import Prefetch
 
 from catalog.filters import ProductFilter
 from catalog.models import Brand, Category, Product, ProductAttribute, ProductImage
 from content.models import HomepageVideo, Policy, SiteSettings
 
-# --- Tiny in-process TTL cache -----------------------------------------
-# The configured Django cache is Redis, which isn't always running locally, and
-# the DB is often a remote instance (~200ms/query). Brands / categories / skin
-# types / site settings change rarely — cache them per-process for a minute so a
-# page render isn't 4 extra round-trips. `--noreload` keeps this warm; a server
-# restart or the 60s TTL picks up edits.
+# --- Reference-data cache (shared Redis) ------------------------------------
+# Brands / categories / skin types / site settings / homepage videos / policies
+# change rarely but are read on nearly every page, and the DB is often a remote
+# instance (~200ms/query). Cache the materialised objects in Redis
+# (django.core.cache) for a minute so a page render isn't ~6 extra round-trips.
 #
-# Admin edits that must show up immediately (not after the TTL) invalidate their
-# key explicitly — see storefront/signals.py. NOTE: `_cache` is per-process, so
-# under a multi-worker gunicorn deploy a signal only clears the worker that
-# handled the save; the other workers still serve stale data until the 60s TTL.
+# Admin edits invalidate their key immediately via post_save/post_delete signals
+# (storefront/signals.py) — Redis is shared, so every gunicorn worker sees the
+# eviction at once. The _TTL is only a safety net if a signal never fires.
+#
+# Keys are prefixed `sf:ref:` to stay clear of the `sf:cat:` / `sf:catgen`
+# catalog-cache keys in the same Redis DB. The cache is configured with
+# IGNORE_EXCEPTIONS, so a Redis outage degrades to an uncached DB read.
 _TTL = 60
-_cache: dict = {}
+_REF_PREFIX = "sf:ref:"
 
 
 def _cached(key, producer):
-    hit = _cache.get(key)
-    now = time.monotonic()
-    if hit and hit[0] > now:
-        return hit[1]
+    from django.core.cache import cache
+
+    ckey = _REF_PREFIX + key
+    try:
+        hit = cache.get(ckey)
+        if hit is not None:
+            return hit
+    except Exception:
+        return producer()
     value = producer()
-    _cache[key] = (now + _TTL, value)
+    if value is not None:
+        try:
+            cache.set(ckey, value, _TTL)
+        except Exception:
+            pass
     return value
 
 
 def invalidate(*keys):
-    """Drop cached entries so the next call re-queries. Called from signal
-    handlers when an admin edits the underlying reference data."""
-    for key in keys:
-        _cache.pop(key, None)
+    """Evict cached reference data so the next call re-queries. Called from the
+    signal handlers in storefront/signals.py when an admin edits it."""
+    from django.core.cache import cache
+
+    try:
+        cache.delete_many([_REF_PREFIX + key for key in keys])
+    except Exception:
+        pass
 
 
 # --- Redis-backed cache for catalog read paths ------------------------------
