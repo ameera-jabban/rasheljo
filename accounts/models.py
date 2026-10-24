@@ -19,7 +19,8 @@ class User(AbstractUser):
 
 
 class Address(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="addresses")
+    # null = a guest-checkout address, reachable only through its Order
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="addresses", null=True, blank=True)
     name = models.CharField(max_length=120)
     phone = models.CharField(max_length=20)
     city = models.CharField(max_length=80)

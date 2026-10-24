@@ -32,7 +32,30 @@ Ports the 4-step flow in pages/Checkout.tsx.
 <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-xs)] md:p-6 [.htmx-request_&]:opacity-60 transition-opacity">
 {% with field="w-full rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--color-brand-primary)] focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15" primary="flex h-11 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] px-5 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--color-brand-primary-hover)] disabled:cursor-not-allowed disabled:bg-[var(--color-ink-subtle)]" secondary="flex h-11 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] px-5 text-sm font-medium text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink-muted)]" %}
 
-{% if step == "address" %}
+{% if step == "address" and guest_form %}
+  {# guest checkout — contact + delivery details go straight onto the order #}
+  <form class="space-y-4" hx-post="{% url 'storefront:checkout_step' %}" hx-target="#checkout-panel" hx-swap="innerHTML">
+    <input type="hidden" name="to" value="shipping"><input type="hidden" name="from" value="address">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h2 class="font-display text-lg font-semibold">{% t 'checkout.contactDetails' %}</h2>
+      <p class="text-sm text-[var(--color-ink-muted)]">{% t 'checkout.haveAccount' %} <a href="/{{ request.LANGUAGE_CODE }}/login/?next=/{{ request.LANGUAGE_CODE }}/checkout/" class="font-medium text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)]">{% t 'checkout.logIn' %}</a></p>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <input name="name" value="{{ guest_form.name }}" required autocomplete="name" placeholder="{% t 'checkout.fullName' %} *" class="{{ field }}">
+      <input name="phone" value="{{ guest_form.phone }}" required type="tel" inputmode="tel" autocomplete="tel" placeholder="{% t 'checkout.phone' %} * (07XXXXXXXX)" class="{{ field }}">
+      <input name="email" value="{{ guest_form.email }}" type="email" autocomplete="email" placeholder="{% t 'checkout.emailOptional' %}" class="{{ field }} sm:col-span-2">
+    </div>
+    <h2 class="pt-2 font-display text-lg font-semibold">{% t 'checkout.shippingAddress' %}</h2>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <input name="city" value="{{ guest_form.city }}" required autocomplete="address-level2" placeholder="{% t 'checkout.city' %} *" class="{{ field }}">
+      <input name="area" value="{{ guest_form.area }}" placeholder="{% t 'checkout.area' %}" class="{{ field }}">
+      <input name="address_line" value="{{ guest_form.address_line }}" required autocomplete="street-address" placeholder="{% t 'checkout.streetAddress' %} *" class="{{ field }} sm:col-span-2">
+      <textarea name="notes" rows="2" placeholder="{% t 'checkout.notes' %}" class="{{ field }} sm:col-span-2">{{ guest_form.notes }}</textarea>
+    </div>
+    <button type="submit" class="{{ primary }} w-full">{% t 'checkout.continueShipping' %}</button>
+  </form>
+
+{% elif step == "address" %}
   <form class="space-y-4" hx-post="{% url 'storefront:checkout_step' %}" hx-target="#checkout-panel" hx-swap="innerHTML" x-data="{ addr: '{{ order.shipping_address_id|default_if_none:'' }}', showNew: false }">
     <input type="hidden" name="to" value="shipping"><input type="hidden" name="from" value="address">
     <h2 class="font-display text-lg font-semibold">{% t 'checkout.shippingAddress' %}</h2>

@@ -113,7 +113,7 @@ class AdminOrderViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = AdminOrderSerializer
     permission_classes = [IsStaffUser]
     filterset_fields = ["status", "payment_method"]
-    search_fields = ["id", "user__email"]
+    search_fields = ["id", "user__email", "email", "shipping_address__phone", "shipping_address__name"]
 
     @action(detail=True, methods=["post"])
     def update_status(self, request, pk=None):

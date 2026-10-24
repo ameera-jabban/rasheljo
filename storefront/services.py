@@ -179,7 +179,7 @@ def existing_cart(request):
 def create_draft_order(request):
     """Snapshot the current cart into a fresh draft Order — mirrors
     orders.views.OrderCreateFromCartView. Clears any earlier abandoned draft for
-    this user so we never accumulate them."""
+    this user (or, for a guest, this session) so we never accumulate them."""
     from django.db import transaction
 
     from orders.models import Order, OrderItem
@@ -190,7 +190,11 @@ def create_draft_order(request):
         return None, "empty"
 
     with transaction.atomic():
-        Order.objects.filter(user=request.user, status="draft").delete()
+        user = request.user if request.user.is_authenticated else None
+        if user:
+            Order.objects.filter(user=user, status="draft").delete()
+        elif request.session.get("checkout_order_id"):
+            Order.objects.filter(id=request.session["checkout_order_id"], user=None, status="draft").delete()
 
         discount, coupon_code = 0, ""
         if cart.coupon_code:
@@ -200,7 +204,7 @@ def create_draft_order(request):
                 coupon_code = coupon.code
 
         order = Order.objects.create(
-            user=request.user, payment_method="cod",
+            user=user, email=user.email if user else "", payment_method="cod",
             coupon_code=coupon_code, discount_amount=discount,
         )
         for item in cart.items.select_related("product"):
@@ -245,6 +249,9 @@ def get_draft_order(request):
     from orders.models import Order
 
     oid = request.session.get("checkout_order_id")
+    if not request.user.is_authenticated:
+        # a guest's draft is reachable only through their own session
+        return Order.objects.filter(id=oid, user=None, status="draft").first() if oid else None
     if oid:
         order = Order.objects.filter(id=oid, user=request.user, status="draft").first()
         if order:

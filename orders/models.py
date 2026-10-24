@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -17,7 +19,14 @@ class Order(models.Model):
     ]
     PAYMENT_METHODS = [("cod", "Cash on Delivery"), ("card", "Card")]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="orders")
+    # null for guest checkout — the guest's contact details live on
+    # shipping_address + email instead.
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="orders", null=True, blank=True
+    )
+    email = models.EmailField(blank=True)  # confirmation emails go here (snapshot of user.email for members)
+    # unguessable id for the public /order/<token>/ status page guests land on
+    public_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
     shipping_address = models.ForeignKey(Address, on_delete=models.PROTECT, null=True, blank=True)
     shipping_method = models.ForeignKey(

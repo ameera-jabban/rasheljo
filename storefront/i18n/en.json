@@ -110,7 +110,18 @@
     "total": "Total",
     "genericError": "Something went wrong. Please try again.",
     "paymentError": "Payment could not be processed.",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "contactDetails": "Contact details",
+    "haveAccount": "Have an account?",
+    "logIn": "Log in",
+    "emailOptional": "Email (optional — for your order confirmation)",
+    "area": "Area / neighbourhood",
+    "notes": "Delivery notes (optional)",
+    "requiredFields": "Please fill in your name, phone, city and street address.",
+    "invalidPhone": "Please enter a valid Jordanian mobile number (07XXXXXXXX).",
+    "invalidEmail": "Please enter a valid email address.",
+    "orderPlaced": "Thank you! Your order has been placed.",
+    "orderPlacedHint": "We'll call you to confirm delivery. Bookmark this page to track your order."
   },
   "badge": {
     "bestseller": "Bestseller",

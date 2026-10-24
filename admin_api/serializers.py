@@ -140,19 +140,34 @@ class AdminOrderItemSerializer(serializers.ModelSerializer):
 
 class AdminOrderSerializer(serializers.ModelSerializer):
     items = AdminOrderItemSerializer(many=True, read_only=True)
-    customer_email = serializers.CharField(source="user.email", read_only=True)
+    customer_email = serializers.SerializerMethodField()
     customer_name = serializers.SerializerMethodField()
+    customer_phone = serializers.SerializerMethodField()
+    is_guest = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = [
-            "id", "status", "customer_email", "customer_name", "shipping_address", "shipping_method",
+            "id", "status", "customer_email", "customer_name", "customer_phone", "is_guest", "shipping_address", "shipping_method",
             "payment_method", "coupon_code", "discount_amount", "shipping_cost", "subtotal", "total",
             "items", "created_at", "updated_at",
         ]
 
+    def get_customer_email(self, obj):
+        return obj.email or (obj.user.email if obj.user_id else "")
+
     def get_customer_name(self, obj):
-        return f"{obj.user.first_name} {obj.user.last_name}".strip() or obj.user.email
+        if obj.user_id:
+            return f"{obj.user.first_name} {obj.user.last_name}".strip() or obj.user.email
+        return obj.shipping_address.name if obj.shipping_address_id else ""
+
+    def get_customer_phone(self, obj):
+        if obj.shipping_address_id:
+            return obj.shipping_address.phone
+        return obj.user.phone if obj.user_id else ""
+
+    def get_is_guest(self, obj):
+        return obj.user_id is None
 
 
 class AdminOrderStatusUpdateSerializer(serializers.Serializer):
@@ -227,11 +242,14 @@ class AdminShippingZoneSerializer(serializers.ModelSerializer):
 
 class AdminPaymentSerializer(serializers.ModelSerializer):
     order_id = serializers.IntegerField(source="order.id", read_only=True)
-    customer_email = serializers.CharField(source="order.user.email", read_only=True)
+    customer_email = serializers.SerializerMethodField()
 
     class Meta:
         model = Payment
         fields = ["id", "order_id", "customer_email", "method", "status", "amount", "provider_reference", "created_at"]
+
+    def get_customer_email(self, obj):
+        return obj.order.email or (obj.order.user.email if obj.order.user_id else "")
 
 
 # --- Notifications (read-only log for admin) ---

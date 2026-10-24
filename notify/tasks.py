@@ -55,38 +55,48 @@ def send_password_reset_email(user_id, reset_url, lang="en"):
     )
 
 
+def _order_recipient(order):
+    """Guest orders carry their own (optional) email; older member orders may
+    predate the Order.email snapshot, so fall back to the account email."""
+    return order.email or (order.user.email if order.user_id else "")
+
+
 @shared_task
 def send_order_confirmation_email(order_id):
     from orders.models import Order
     order = Order.objects.select_related("user").get(id=order_id)
-    send_mail(
-        subject=f"Order #{order.id} confirmed",
-        message=f"Thanks for your order! Total: {order.total} JOD.",
-        from_email=None,
-        recipient_list=[order.user.email],
-        fail_silently=True,
-    )
-    Notification.objects.create(
-        user=order.user, notification_type="order_confirmation",
-        title=f"Order #{order.id} confirmed", body=f"Total: {order.total} JOD",
-    )
+    if recipient := _order_recipient(order):
+        send_mail(
+            subject=f"Order #{order.id} confirmed",
+            message=f"Thanks for your order! Total: {order.total} JOD.",
+            from_email=None,
+            recipient_list=[recipient],
+            fail_silently=True,
+        )
+    if order.user_id:
+        Notification.objects.create(
+            user=order.user, notification_type="order_confirmation",
+            title=f"Order #{order.id} confirmed", body=f"Total: {order.total} JOD",
+        )
 
 
 @shared_task
 def send_order_status_update(order_id, new_status):
     from orders.models import Order
     order = Order.objects.select_related("user").get(id=order_id)
-    send_mail(
-        subject=f"Order #{order.id} is now {new_status}",
-        message=f"Your order status changed to: {new_status}.",
-        from_email=None,
-        recipient_list=[order.user.email],
-        fail_silently=True,
-    )
-    Notification.objects.create(
-        user=order.user, notification_type="order_status_update",
-        title=f"Order #{order.id} — {new_status}", body="",
-    )
+    if recipient := _order_recipient(order):
+        send_mail(
+            subject=f"Order #{order.id} is now {new_status}",
+            message=f"Your order status changed to: {new_status}.",
+            from_email=None,
+            recipient_list=[recipient],
+            fail_silently=True,
+        )
+    if order.user_id:
+        Notification.objects.create(
+            user=order.user, notification_type="order_status_update",
+            title=f"Order #{order.id} — {new_status}", body="",
+        )
 
 
 @shared_task
@@ -139,10 +149,13 @@ def cart_abandonment_reminder():
 def send_review_request_email(order_id):
     from orders.models import Order
     order = Order.objects.select_related("user").get(id=order_id)
+    # reviews need an account, so only members get the ask
+    if not order.user_id:
+        return
     send_mail(
         subject="How was your order?",
         message="We'd love a quick review of your recent purchase.",
         from_email=None,
-        recipient_list=[order.user.email],
+        recipient_list=[_order_recipient(order)],
         fail_silently=True,
     )

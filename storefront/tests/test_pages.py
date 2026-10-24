@@ -192,6 +192,83 @@ class TestCheckout:
         assert product.stock == 9
         assert not CartItem.objects.filter(cart__user=user).exists()
 
+    GUEST = {"to": "shipping", "from": "address", "name": "Lina", "phone": "+962 79 123 4567",
+             "email": "lina@example.com", "city": "Amman", "area": "Abdoun",
+             "address_line": "12 Rainbow St", "notes": "Call first"}
+
+    def test_guest_full_checkout_places_order(self, client, product, mailoutbox):
+        from orders.models import Order
+        from shipping.models import ShippingMethod
+        sm = ShippingMethod.objects.create(name_en="Standard", cost="2.00")
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id})
+        html = client.get("/en/checkout/").content.decode()
+        assert 'name="address_line"' in html and "/login/?next=/en/checkout/" in html
+
+        client.post(reverse("storefront:checkout_step"), self.GUEST)
+        client.post(reverse("storefront:checkout_step"),
+                    {"to": "payment", "from": "shipping", "shipping_method_id": sm.id})
+        client.post(reverse("storefront:checkout_step"),
+                    {"to": "review", "from": "payment", "payment_method": "cod"})
+        r = client.post(reverse("storefront:checkout_confirm"))
+
+        order = Order.objects.exclude(status="draft").get()
+        assert order.user is None and order.status == "pending"
+        assert order.email == "lina@example.com"
+        addr = order.shipping_address
+        assert addr.user is None and addr.phone == "0791234567" and addr.area == "Abdoun"
+        assert r.status_code == 204 and r["HX-Redirect"] == f"/en/order/{order.public_token}/?placed=1"
+        product.refresh_from_db()
+        assert product.stock == 9
+        assert not CartItem.objects.filter(cart__items__isnull=False).exists()
+        assert mailoutbox and mailoutbox[0].to == ["lina@example.com"]
+
+        page = client.get(r["HX-Redirect"]).content.decode()
+        assert f"#{order.id}" in page and "12 Rainbow St" in page
+
+    def test_guest_validation_keeps_input(self, client, product):
+        from orders.models import Order
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id})
+        client.get("/en/checkout/")
+        r = client.post(reverse("storefront:checkout_step"), {**self.GUEST, "phone": "12345"})
+        html = r.content.decode()
+        assert "valid Jordanian mobile" in html and 'value="12 Rainbow St"' in html
+        assert Order.objects.get().shipping_address_id is None
+
+    def test_guest_editing_address_reuses_row(self, client, product):
+        from shipping.models import ShippingMethod
+        ShippingMethod.objects.create(name_en="Standard", cost="2.00")  # the shipping step renders the first method
+        from accounts.models import Address
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id})
+        client.get("/en/checkout/")
+        client.post(reverse("storefront:checkout_step"), self.GUEST)
+        client.post(reverse("storefront:checkout_step"), {**self.GUEST, "address_line": "99 New St"})
+        assert Address.objects.count() == 1 and Address.objects.get().address_line == "99 New St"
+
+    def test_guest_cannot_pick_someone_elses_address(self, client, user, product):
+        from shipping.models import ShippingMethod
+        ShippingMethod.objects.create(name_en="Standard", cost="2.00")  # the shipping step renders the first method
+        from orders.models import Order
+        other = self._address(user)
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id})
+        client.get("/en/checkout/")
+        client.post(reverse("storefront:checkout_step"),
+                    {"to": "shipping", "from": "address", "address_id": other.id})
+        assert Order.objects.get(user=None).shipping_address_id is None
+
+    def test_guest_confirm_without_address_rejected(self, client, product):
+        from orders.models import Order
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id})
+        client.get("/en/checkout/")
+        client.post(reverse("storefront:checkout_confirm"))
+        assert Order.objects.get().status == "draft"
+
+    def test_order_status_page_404s_for_unknown_or_draft(self, client, product):
+        import uuid
+        from orders.models import Order
+        assert client.get(f"/en/order/{uuid.uuid4()}/").status_code == 404
+        draft = Order.objects.create()
+        assert client.get(f"/en/order/{draft.public_token}/").status_code == 404
+
 
 class TestAccount:
     def test_dashboard(self, client, user):

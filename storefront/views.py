@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import functools
 import json
+import re
 
 from django.core.paginator import Paginator
 from django.http import Http404, HttpResponse
@@ -513,6 +514,65 @@ def _order_total(order, cart_totals):
     return cart_totals["subtotal"] + shipping - cart_totals["discount"]
 
 
+_JO_MOBILE = re.compile(r"^(?:\+?962|0)?(7[789]\d{7})$")
+
+
+def _normalize_phone(raw):
+    """Jordanian mobile in any common spelling (07…, +9627…, 9627…) → 07XXXXXXXX,
+    or None if it isn't one."""
+    m = _JO_MOBILE.match(re.sub(r"[\s\-()]", "", raw or ""))
+    return f"0{m.group(1)}" if m else None
+
+
+GUEST_FIELDS = ("name", "phone", "email", "city", "area", "address_line", "notes")
+
+
+def _guest_form(request, order):
+    """Values for the guest contact/address form: what they just posted (after a
+    validation error), else what's already on the draft order."""
+    if request.method == "POST" and "address_line" in request.POST:
+        return {f: (request.POST.get(f) or "").strip() for f in GUEST_FIELDS}
+    addr = order.shipping_address if order and order.shipping_address_id else None
+    form = {f: getattr(addr, f, "") if addr else "" for f in GUEST_FIELDS}
+    form["email"] = order.email if order else ""
+    form["city"] = form["city"] or "Amman"
+    return form
+
+
+def _apply_guest_address(request, order):
+    """Validate the guest checkout form and write it onto the draft order (its
+    own Address row, user=None). Returns an error message or None."""
+    from django.core.exceptions import ValidationError
+    from django.core.validators import validate_email
+
+    from accounts.models import Address
+
+    data = {f: (request.POST.get(f) or "").strip() for f in GUEST_FIELDS}
+    if not (data["name"] and data["phone"] and data["city"] and data["address_line"]):
+        return translate("checkout.requiredFields")
+    phone = _normalize_phone(data["phone"])
+    if not phone:
+        return translate("checkout.invalidPhone")
+    if data["email"]:
+        try:
+            validate_email(data["email"])
+        except ValidationError:
+            return translate("checkout.invalidEmail")
+
+    fields = {"name": data["name"][:120], "phone": phone, "city": data["city"][:80],
+              "area": data["area"][:120], "address_line": data["address_line"][:255],
+              "notes": data["notes"][:255]}
+    addr = order.shipping_address if order.shipping_address_id and order.shipping_address.user_id is None else None
+    if addr:
+        for k, v in fields.items():
+            setattr(addr, k, v)
+        addr.save()
+    else:
+        order.shipping_address = Address.objects.create(user=None, **fields)
+    order.email = data["email"]
+    return None
+
+
 def _checkout_ctx(request, order, step, *, error=None):
     from accounts.models import Address
 
@@ -531,7 +591,8 @@ def _checkout_ctx(request, order, step, *, error=None):
             "review": translate("checkout.stepReview"),
         },
         "error": error,
-        "addresses": list(Address.objects.filter(user=request.user)),
+        "addresses": list(Address.objects.filter(user=request.user)) if request.user.is_authenticated else [],
+        "guest_form": None if request.user.is_authenticated else _guest_form(request, order),
         "shipping_methods": services.shipping_methods(),
         "items": list(cart.items.all()) if cart else [],
         "totals": totals,
@@ -540,7 +601,6 @@ def _checkout_ctx(request, order, step, *, error=None):
     }
 
 
-@_login_required
 def checkout(request):
     cart = services.existing_cart(request)
     if not cart or not cart.items.exists():
@@ -554,7 +614,6 @@ def checkout(request):
 
 
 @require_POST
-@_login_required
 def checkout_step(request):
     from accounts.models import Address
     from shipping.models import ShippingMethod
@@ -571,7 +630,9 @@ def checkout_step(request):
     error = None
 
     # Apply the patch for the step we're leaving.
-    if "address_id" in request.POST:
+    if not request.user.is_authenticated and request.POST.get("from") == "address" and "address_line" in request.POST:
+        error = _apply_guest_address(request, order)
+    elif "address_id" in request.POST and request.user.is_authenticated:
         addr = Address.objects.filter(id=_int(request.POST["address_id"]), user=request.user).first()
         if not addr:
             error = translate("checkout.genericError")
@@ -619,7 +680,6 @@ def checkout_add_address(request):
 
 
 @require_POST
-@_login_required
 def checkout_confirm(request):
     from django.db import transaction
 
@@ -665,8 +725,32 @@ def checkout_confirm(request):
     enqueue(send_order_confirmation_email, order.id)
     request.session.pop("checkout_order_id", None)
     resp = HttpResponse(status=204)
-    resp["HX-Redirect"] = f"/{lang}/account/orders/?placed={order.id}"
+    if order.user_id:
+        resp["HX-Redirect"] = f"/{lang}/account/orders/?placed={order.id}"
+    else:
+        resp["HX-Redirect"] = f"/{lang}/order/{order.public_token}/?placed=1"
     return resp
+
+
+def order_status(request, token):
+    """Public order page reached by the unguessable public_token — where guest
+    checkouts land, and the link their confirmation email carries."""
+    from orders.models import Order
+
+    order = (
+        Order.objects.filter(public_token=token)
+        .exclude(status="draft")
+        .prefetch_related("items")
+        .select_related("shipping_address", "shipping_method")
+        .first()
+    )
+    if not order:
+        raise Http404
+    idx = ORDER_STATUS_FLOW.index(order.status) if order.status in ORDER_STATUS_FLOW else -1
+    return render(request, "storefront/order_status.html", {
+        "order": order, "status_flow": ORDER_STATUS_FLOW, "status_index": idx,
+        "just_placed": request.GET.get("placed") == "1",
+    })
 
 
 def _orders_qs(request):

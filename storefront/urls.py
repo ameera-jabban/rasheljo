@@ -21,6 +21,7 @@ urlpatterns = [
     path("products/<slug:slug>/", views.product_detail, name="product"),
     path("cart/", views.cart_page, name="cart"),
     path("checkout/", views.checkout, name="checkout"),
+    path("order/<uuid:token>/", views.order_status, name="order_status"),
     path("account/", views.account, name="account"),
     path("account/profile/", views.account_profile, name="account_profile"),
     path("account/addresses/", views.account_addresses, name="account_addresses"),
