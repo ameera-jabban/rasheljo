@@ -18,6 +18,12 @@
 /* Alpine: hide elements that shouldn't flash before Alpine initialises. */
 [x-cloak] { display: none !important; }
 
+/* iOS Safari zooms the page when a focused field's text is under 16px. Unlayered,
+ * so it beats the text-sm utilities on inputs — phones only. */
+@media (max-width: 639px) {
+  input, select, textarea { font-size: 16px; }
+}
+
 @theme {
   /* Color tokens — from the Phase 4 design system spec */
   --color-bg: #FBFAF8;

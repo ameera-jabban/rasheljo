@@ -74,7 +74,11 @@
     "discount": "الخصم",
     "total": "الإجمالي",
     "each": "للوحدة",
-    "secureCheckout": "دفع آمن · الدفع عند الاستلام متاح"
+    "secureCheckout": "دفع آمن · الدفع عند الاستلام متاح",
+    "viewCart": "عرض السلة",
+    "haveCoupon": "عندك كود خصم؟",
+    "stockLimit": "متبقي {{count}} فقط بالمخزون.",
+    "stockLimitInCart": "متوفر {{count}} فقط — وعندك {{inCart}} بالسلة."
   },
   "checkout": {
     "title": "إتمام الشراء",
@@ -129,7 +133,18 @@
     "cliqHolder": "اسم المستفيد",
     "cliqAmount": "المبلغ المطلوب تحويله",
     "copy": "نسخ",
-    "copied": "تم النسخ"
+    "copied": "تم النسخ",
+    "sameDay": "توصيل بنفس اليوم",
+    "edit": "تعديل",
+    "outOfStock": "عذراً، متبقي {{count}} فقط من “{{name}}”. عدّلي السلة وحاولي مرة ثانية.",
+    "detailedAddress": "العنوان بالتفصيل",
+    "detailedAddressHint": "الشارع، رقم البناية، الطابق/الشقة، أقرب معلم",
+    "stepDetails": "بياناتك وعنوانك",
+    "stepDeliveryPayment": "التوصيل والدفع",
+    "continueDelivery": "متابعة للتوصيل والدفع",
+    "deliverTo": "التوصيل إلى",
+    "chooseShipping": "يرجى اختيار طريقة التوصيل.",
+    "shippingNext": "+ التوصيل، بالخطوة الجاية"
   },
   "badge": {
     "bestseller": "الأكثر مبيعاً",

@@ -73,7 +73,12 @@ def home(request):
 
 # --- Cart (htmx fragments) ---------------------------------------------
 
-def _cart_control_response(request, product, *, message=None, bump=False):
+def _toast(message, *, cart_link=False):
+    """HX-Trigger payload for the base.html toast; cart_link adds a "View cart" action."""
+    return json.dumps({"toast": {"value": message, "cart": True} if cart_link else message})
+
+
+def _cart_control_response(request, product, *, message=None, bump=False, cart_link=False):
     """Re-render the add-to-cart control for `product` + OOB header badge, and
     (optionally) fire the toast via an HX-Trigger header. Shared by add/update/
     remove so the card, badge and toast never drift — the htmx equivalent of the
@@ -89,9 +94,7 @@ def _cart_control_response(request, product, *, message=None, bump=False):
     html += render(request, "storefront/partials/_cart_badge.html", {**ctx, "oob": True}).content.decode()
     resp = HttpResponse(html)
     if message:
-        import json
-
-        resp["HX-Trigger"] = json.dumps({"toast": message})
+        resp["HX-Trigger"] = _toast(message, cart_link=cart_link)
     return resp
 
 
@@ -114,17 +117,24 @@ def cart_add(request):
     cart = services.get_cart(request)
     from cart.models import CartItem
 
-    qty = max(1, int(request.POST.get("quantity", 1)))
+    qty = max(1, _int(request.POST.get("quantity")) or 1)
     fresh = _reload_product(product.id)
-    if product.stock < qty:
-        return _cart_control_response(request, fresh, message=translate("cart.updateFailed"))
-    item, created = CartItem.objects.get_or_create(cart=cart, product=product, variant=None,
-                                                   defaults={"quantity": qty})
-    if not created:
+    from_pdp = not request.POST.get("control")
+    item = CartItem.objects.filter(cart=cart, product=product, variant=None).first()
+    already = item.quantity if item else 0
+    if product.stock < already + qty:
+        msg = _stock_limit_msg(product, already)
+        if from_pdp:
+            ctx = {"in_cart_qty": already, "error": msg}
+            return render(request, "storefront/partials/_pdp_cart_msg.html", ctx)
+        return _cart_control_response(request, fresh, message=msg)
+    if item:
         item.quantity += qty
         item.save()
+    else:
+        CartItem.objects.create(cart=cart, product=product, variant=None, quantity=qty)
 
-    if not request.POST.get("control"):
+    if from_pdp:
         # Product-detail page: keep the qty picker + button, just confirm + update badge.
         in_cart = services.cart_item_map(request).get(product.id)
         ctx = {"product": fresh, "cart_item": in_cart, "cart_count": services.cart_badge_count(request),
@@ -132,11 +142,20 @@ def cart_add(request):
         html = render(request, "storefront/partials/_pdp_cart_msg.html", ctx).content.decode()
         html += render(request, "storefront/partials/_cart_badge.html", {**ctx, "oob": True}).content.decode()
         resp = HttpResponse(html)
-        import json
-        resp["HX-Trigger"] = json.dumps({"toast": translate("product.addedToCart")})
+        resp["HX-Trigger"] = _toast(translate("product.addedToCart"), cart_link=True)
         return resp
 
-    return _cart_control_response(request, fresh, message=translate("product.addedToCart"), bump=True)
+    return _cart_control_response(request, fresh, message=translate("product.addedToCart"), bump=True,
+                                  cart_link=True)
+
+
+def _stock_limit_msg(product, already):
+    """Tells the shopper how many they can still add instead of a vague failure."""
+    if product.stock <= 0:
+        return translate("product.outOfStock")
+    if already:
+        return translate("cart.stockLimitInCart", count=product.stock, inCart=already)
+    return translate("cart.stockLimit", count=product.stock)
 
 
 def _cart_page_response(request, *, message=None):
@@ -148,8 +167,7 @@ def _cart_page_response(request, *, message=None):
                    {"cart_count": ctx["totals"]["item_count"], "oob": True}).content.decode()
     resp = HttpResponse(html)
     if message:
-        import json
-        resp["HX-Trigger"] = json.dumps({"toast": message})
+        resp["HX-Trigger"] = _toast(message)
     return resp
 
 
@@ -166,12 +184,14 @@ def cart_update(request, item_id):
     if not item:
         return _cart_page_response(request) if _from_cart_page(request) else HttpResponse(status=404)
     pid = item.product_id
-    qty = int(request.POST.get("quantity", item.quantity))
+    qty = _int(request.POST.get("quantity"))
+    if qty is None:
+        qty = item.quantity
     msg = None
     if qty < 1:
         item.delete()
     elif item.product.stock < qty:
-        msg = translate("cart.updateFailed")
+        msg = _stock_limit_msg(item.product, 0)
     else:
         item.quantity = qty
         item.save()
@@ -506,7 +526,10 @@ def review_create(request, product_id):
     return render(request, "storefront/partials/_reviews.html", ctx)
 
 
-CHECKOUT_STEPS = ["address", "shipping", "payment", "review"]
+# Two steps on purpose (phones): who/where, then delivery + payment + place order
+# on one screen. The old step names still arrive from stale tabs — map them.
+CHECKOUT_STEPS = ["address", "review"]
+_LEGACY_STEPS = {"shipping": "review", "payment": "review"}
 
 
 def _order_total(order, cart_totals):
@@ -585,10 +608,8 @@ def _checkout_ctx(request, order, step, *, error=None):
         "step_index": CHECKOUT_STEPS.index(step),
         "steps": CHECKOUT_STEPS,
         "step_labels": {
-            "address": translate("checkout.stepAddress"),
-            "shipping": translate("checkout.stepShipping"),
-            "payment": translate("checkout.stepPayment"),
-            "review": translate("checkout.stepReview"),
+            "address": translate("checkout.stepDetails"),
+            "review": translate("checkout.stepDeliveryPayment"),
         },
         "error": error,
         "addresses": list(Address.objects.filter(user=request.user)) if request.user.is_authenticated else [],
@@ -624,7 +645,7 @@ def checkout_step(request):
         resp["HX-Redirect"] = f"/{request.LANGUAGE_CODE}/cart/"
         return resp
 
-    to = request.POST.get("to", "address")
+    to = _LEGACY_STEPS.get(request.POST.get("to"), request.POST.get("to"))
     if to not in CHECKOUT_STEPS:
         to = "address"
     error = None
@@ -638,6 +659,31 @@ def checkout_step(request):
             error = translate("checkout.genericError")
         else:
             order.shipping_address = addr
+    error = _apply_delivery_and_payment(request, order) or error
+
+    if error:
+        # stay on the current step
+        current = _LEGACY_STEPS.get(request.POST.get("from"), request.POST.get("from"))
+        return render(request, "storefront/partials/_checkout_panel.html",
+                      _checkout_ctx(request, order, current if current in CHECKOUT_STEPS else "address", error=error))
+
+    if to == "review" and not order.shipping_address_id:
+        to = "address"
+    if to == "review" and not order.shipping_method_id:
+        # preselect the cheapest method so step 2 is one tap away from "Place order"
+        methods = services.shipping_methods()
+        order.shipping_method = ShippingMethod.objects.filter(id=methods[0].id).first() if methods else None
+    order.save()
+    order.recalculate_totals()
+    return render(request, "storefront/partials/_checkout_panel.html", _checkout_ctx(request, order, to))
+
+
+def _apply_delivery_and_payment(request, order):
+    """Shipping method + payment method from the step-2 form (posted on every
+    change and again with "Place order"). Returns an error message or None."""
+    from shipping.models import ShippingMethod
+
+    error = None
     if "shipping_method_id" in request.POST:
         m = ShippingMethod.objects.filter(id=_int(request.POST["shipping_method_id"]), is_active=True).first()
         if not m:
@@ -647,16 +693,7 @@ def checkout_step(request):
     method = request.POST.get("payment_method")
     if method == "cod" or (method == "cliq" and services.get_site_settings().cliq_alias):
         order.payment_method = method
-
-    if error:
-        # stay on the current step
-        current = request.POST.get("from", "address")
-        return render(request, "storefront/partials/_checkout_panel.html",
-                      _checkout_ctx(request, order, current if current in CHECKOUT_STEPS else "address", error=error))
-
-    order.save()
-    order.recalculate_totals()
-    return render(request, "storefront/partials/_checkout_panel.html", _checkout_ctx(request, order, to))
+    return error
 
 
 @require_POST
@@ -697,15 +734,27 @@ def checkout_confirm(request):
         resp["HX-Redirect"] = f"/{lang}/cart/"
         return resp
 
+    # "Place order" posts the whole step-2 form, so apply its latest choices first
+    error = _apply_delivery_and_payment(request, order)
+    if not error and not order.shipping_method_id:
+        error = translate("checkout.chooseShipping")
+    if error:
+        return render(request, "storefront/partials/_checkout_panel.html",
+                      _checkout_ctx(request, order, "review", error=error))
+    order.save()
+    order.recalculate_totals()
+
     if not order.shipping_address_id:
         return render(request, "storefront/partials/_checkout_panel.html",
-                      _checkout_ctx(request, order, "review", error=translate("checkout.genericError")))
+                      _checkout_ctx(request, order, "address", error=translate("checkout.genericError")))
 
     try:
         with transaction.atomic():
             for item in order.items.select_related("product"):
                 if item.product.stock < item.quantity:
-                    raise ValueError(translate("checkout.genericError"))
+                    name = (item.product.name_ar if lang == "ar" else "") or item.product_name
+                    raise ValueError(translate("checkout.outOfStock", name=name,
+                                               count=max(item.product.stock, 0)))
                 item.product.stock -= item.quantity
                 item.product.save(update_fields=["stock"])
             order.transition_to("pending")

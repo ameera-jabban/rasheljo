@@ -15,19 +15,19 @@
       <p class="price shrink-0 text-sm font-semibold tracking-tight text-[var(--color-ink)]">{{ item.line_total|money }}</p>
     </div>
     <div class="mt-auto flex items-center gap-3 pt-3">
-      <div class="flex h-9 items-stretch overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-border-strong)]">
+      <div class="flex h-11 items-stretch overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-border-strong)]">
         <button type="button" aria-label="{% t 'cart.decrease' %}"
           hx-post="{% if item.quantity <= 1 %}{% url 'storefront:cart_remove' item.id %}{% else %}{% url 'storefront:cart_update' item.id %}{% endif %}"
           hx-vals='{"page":"cart","quantity":{{ item.quantity|add:"-1" }}}' hx-target="#cart-body" hx-swap="innerHTML" hx-disabled-elt="closest div"
-          class="flex w-9 items-center justify-center text-[var(--color-ink-muted)] transition-colors hover:bg-[var(--color-bg)] hover:text-[var(--color-ink)]">−</button>
-        <span class="flex w-9 items-center justify-center border-x border-[var(--color-border)] text-sm font-semibold tabular-nums" aria-live="polite">{{ item.quantity }}</span>
+          class="flex w-11 items-center justify-center text-lg text-[var(--color-ink-muted)] transition-colors hover:bg-[var(--color-bg)] hover:text-[var(--color-ink)]">−</button>
+        <span class="flex w-10 items-center justify-center border-x border-[var(--color-border)] text-sm font-semibold tabular-nums" aria-live="polite">{{ item.quantity }}</span>
         <button type="button" aria-label="{% t 'cart.increase' %}" {% if not item.product.in_stock %}disabled{% endif %}
           hx-post="{% url 'storefront:cart_update' item.id %}" hx-vals='{"page":"cart","quantity":{{ item.quantity|add:"1" }}}' hx-target="#cart-body" hx-swap="innerHTML" hx-disabled-elt="closest div"
-          class="flex w-9 items-center justify-center text-[var(--color-ink-muted)] transition-colors hover:bg-[var(--color-bg)] hover:text-[var(--color-ink)] disabled:opacity-30">+</button>
+          class="flex w-11 items-center justify-center text-lg text-[var(--color-ink-muted)] transition-colors hover:bg-[var(--color-bg)] hover:text-[var(--color-ink)] disabled:opacity-30">+</button>
       </div>
       <button type="button" aria-label="{% t 'cart.remove' %}"
         hx-post="{% url 'storefront:cart_remove' item.id %}" hx-vals='{"page":"cart"}' hx-target="#cart-body" hx-swap="innerHTML"
-        class="text-xs font-medium text-[var(--color-ink-muted)] underline decoration-[var(--color-border-strong)] underline-offset-2 transition-colors hover:text-[var(--color-sale)] hover:decoration-[var(--color-sale)]">{% t 'cart.remove' %}</button>
+        class="px-2 py-2 text-sm font-medium text-[var(--color-ink-muted)] underline decoration-[var(--color-border-strong)] underline-offset-2 transition-colors hover:text-[var(--color-sale)] hover:decoration-[var(--color-sale)]">{% t 'cart.remove' %}</button>
     </div>
   </div>
 </div>

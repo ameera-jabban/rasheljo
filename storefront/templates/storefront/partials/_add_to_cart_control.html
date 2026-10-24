@@ -23,11 +23,11 @@ Params: product; cart_item (CartItem|None).
   <div role="group" aria-label="{% t 'cart.quantity' %}"
     class="flex h-10 w-full items-stretch overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-brand-primary)] bg-[var(--color-brand-tint)] [.htmx-request_&]:opacity-60">
     {% with step_cls="flex flex-1 items-center justify-center text-[var(--color-brand-primary)] transition-colors duration-150 hover:bg-[var(--color-brand-primary)] hover:text-white active:bg-[var(--color-brand-primary-hover)] active:text-white disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[var(--color-brand-primary)]" %}
-    <button type="button" class="{{ step_cls }}" aria-label="{% t 'cart.decrease' %}"
+    <button type="button" class="{{ step_cls }}" aria-label="{% if cart_item.quantity <= 1 %}{% t 'cart.removeItem' %}{% else %}{% t 'cart.decrease' %}{% endif %}"
       hx-post="{% if cart_item.quantity <= 1 %}{% url 'storefront:cart_remove' cart_item.id %}{% else %}{% url 'storefront:cart_update' cart_item.id %}{% endif %}"
       hx-vals='{"quantity": {{ cart_item.quantity|add:"-1" }}, "product_id": {{ product.id }}, "control": "1"}'
       hx-target="#atc-{{ product.id }}" hx-swap="outerHTML" hx-disabled-elt="closest div">
-      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      {% if cart_item.quantity <= 1 %}<svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M2.5 4h11M6 4V2.75h4V4M4 4l.55 8.2a1 1 0 0 0 1 .8h4.9a1 1 0 0 0 1-.8L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>{% else %}<svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>{% endif %}
     </button>
     <span class="flex flex-1 items-center justify-center border-x border-[var(--color-brand-primary)]/25 text-sm font-semibold tabular-nums text-[var(--color-ink)]" aria-live="polite">{{ cart_item.quantity }}</span>
     <button type="button" class="{{ step_cls }}" aria-label="{% t 'cart.increase' %}" {% if not product.in_stock %}disabled title="{% t 'product.outOfStock' %}"{% endif %}
@@ -35,13 +35,6 @@ Params: product; cart_item (CartItem|None).
       hx-vals='{"quantity": {{ cart_item.quantity|add:"1" }}, "product_id": {{ product.id }}, "control": "1"}'
       hx-target="#atc-{{ product.id }}" hx-swap="outerHTML" hx-disabled-elt="closest div">
       <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-    </button>
-    <button type="button" aria-label="{% t 'cart.removeItem' %}"
-      class="flex flex-1 items-center justify-center border-l border-[var(--color-brand-primary)]/25 text-[var(--color-ink-muted)] transition-colors duration-150 hover:bg-[var(--color-sale)] hover:text-white active:opacity-80"
-      hx-post="{% url 'storefront:cart_remove' cart_item.id %}"
-      hx-vals='{"product_id": {{ product.id }}, "control": "1"}'
-      hx-target="#atc-{{ product.id }}" hx-swap="outerHTML" hx-disabled-elt="closest div">
-      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M2.5 4h11M6 4V2.75h4V4M4 4l.55 8.2a1 1 0 0 0 1 .8h4.9a1 1 0 0 0 1-.8L12 4M6.6 7v3.4M9.4 7v3.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
     {% endwith %}
   </div>

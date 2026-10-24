@@ -12,16 +12,39 @@
   <a href="{% url 'storefront:shop' %}" class="mt-6 inline-flex h-11 items-center rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-brand-primary-hover)]">{% t 'cart.continueShopping' %}</a>
 </div>
 {% else %}
-<div class="mx-auto max-w-5xl px-4 py-10">
-  <h1 class="font-display text-[1.75rem] font-semibold tracking-tight">{% t 'checkout.title' %}</h1>
-  <div class="grid gap-8 lg:grid-cols-[1fr_340px]">
-    <div id="checkout-panel">
+<div class="mx-auto max-w-5xl px-4 pt-6 md:py-12">
+  <h1 class="font-display text-2xl font-semibold tracking-tight md:text-[1.75rem]">{% t 'checkout.title' %}</h1>
+  <div class="mt-4 grid gap-6 md:mt-0 lg:grid-cols-[1fr_340px] lg:gap-8" style="padding-bottom:2.5rem">
+    <div id="checkout-panel" class="scroll-mt-24">
       {% include "storefront/partials/_checkout_panel.html" %}
     </div>
-    <aside class="lg:sticky lg:top-24 lg:self-start">
+    <aside class="hidden md:block lg:sticky lg:top-24 lg:self-start">
       {% include "storefront/partials/_checkout_summary.html" %}
     </aside>
   </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block body_end %}
+<script>
+  // After each step swap, bring the new step (or its error) into view — on a
+  // phone the user is otherwise left scrolled down where the old form ended.
+  function currentStep() {
+    var el = document.querySelector("#checkout-panel [data-checkout-step]");
+    return el && el.getAttribute("data-checkout-step");
+  }
+  var lastStep = currentStep();
+  document.addEventListener("htmx:afterSwap", function (e) {
+    if (!e.detail.target || e.detail.target.id !== "checkout-panel") return;
+    var panel = e.detail.target;
+    var alert = panel.querySelector("[role=alert]");
+    var step = currentStep();
+    if ((step !== lastStep || alert) && panel.getBoundingClientRect().top < 0) {
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    lastStep = step;
+    if (alert) { alert.setAttribute("tabindex", "-1"); alert.focus({ preventScroll: true }); }
+  });
+</script>
 {% endblock %}

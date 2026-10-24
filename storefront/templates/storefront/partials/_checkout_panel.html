@@ -4,6 +4,13 @@ The checkout wizard body — progress rail + the current step. htmx swaps this
 Ports the 4-step flow in pages/Checkout.tsx.
 {% endcomment %}
 {% if is_htmx %}{% include "storefront/partials/_checkout_summary.html" with oob=1 %}{% endif %}
+<span hidden data-checkout-step="{{ step }}"></span>
+{% if step == "address" %}
+<p class="mt-2 flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm md:hidden">
+  <span class="text-[var(--color-ink-muted)]">{% t 'checkout.total' %} <span class="text-xs">({% t 'checkout.shippingNext' %})</span></span>
+  <span class="price font-semibold">{{ grand_total|money }}</span>
+</p>
+{% endif %}
 
 <ol class="mb-8 mt-6 flex items-center">
   {% for s in steps %}
@@ -30,34 +37,37 @@ Ports the 4-step flow in pages/Checkout.tsx.
 {% endif %}
 
 <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-xs)] md:p-6 [.htmx-request_&]:opacity-60 transition-opacity">
-{% with field="w-full rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--color-brand-primary)] focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15" primary="flex h-11 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] px-5 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--color-brand-primary-hover)] disabled:cursor-not-allowed disabled:bg-[var(--color-ink-subtle)]" secondary="flex h-11 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] px-5 text-sm font-medium text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink-muted)]" %}
+{% with field="w-full rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3.5 py-2.5 text-base outline-none focus:border-[var(--color-brand-primary)] focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15" primary="flex h-11 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] px-5 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--color-brand-primary-hover)] disabled:cursor-not-allowed disabled:bg-[var(--color-ink-subtle)]" secondary="flex h-11 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] px-5 text-sm font-medium text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink-muted)]" %}
 
 {% if step == "address" and guest_form %}
   {# guest checkout — contact + delivery details go straight onto the order #}
   <form class="space-y-4" hx-post="{% url 'storefront:checkout_step' %}" hx-target="#checkout-panel" hx-swap="innerHTML">
-    <input type="hidden" name="to" value="shipping"><input type="hidden" name="from" value="address">
+    <input type="hidden" name="to" value="review"><input type="hidden" name="from" value="address">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <h2 class="font-display text-lg font-semibold">{% t 'checkout.contactDetails' %}</h2>
       <p class="text-sm text-[var(--color-ink-muted)]">{% t 'checkout.haveAccount' %} <a href="/{{ request.LANGUAGE_CODE }}/login/?next=/{{ request.LANGUAGE_CODE }}/checkout/" class="font-medium text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)]">{% t 'checkout.logIn' %}</a></p>
     </div>
     <div class="grid gap-3 sm:grid-cols-2">
       <input name="name" value="{{ guest_form.name }}" required autocomplete="name" placeholder="{% t 'checkout.fullName' %} *" class="{{ field }}">
-      <input name="phone" value="{{ guest_form.phone }}" required type="tel" inputmode="tel" autocomplete="tel" placeholder="{% t 'checkout.phone' %} * (07XXXXXXXX)" class="{{ field }}">
+      <input name="phone" value="{{ guest_form.phone }}" required dir="ltr" type="tel" inputmode="tel" autocomplete="tel" placeholder="{% t 'checkout.phone' %} * (07XXXXXXXX)" class="{{ field }}"{% if is_ar %} style="text-align:right"{% endif %}>
       <input name="email" value="{{ guest_form.email }}" type="email" autocomplete="email" placeholder="{% t 'checkout.emailOptional' %}" class="{{ field }} sm:col-span-2">
     </div>
     <h2 class="pt-2 font-display text-lg font-semibold">{% t 'checkout.shippingAddress' %}</h2>
     <div class="grid gap-3 sm:grid-cols-2">
       <input name="city" value="{{ guest_form.city }}" required autocomplete="address-level2" placeholder="{% t 'checkout.city' %} *" class="{{ field }}">
       <input name="area" value="{{ guest_form.area }}" placeholder="{% t 'checkout.area' %}" class="{{ field }}">
-      <input name="address_line" value="{{ guest_form.address_line }}" required autocomplete="street-address" placeholder="{% t 'checkout.streetAddress' %} *" class="{{ field }} sm:col-span-2">
+      <label class="block sm:col-span-2">
+        <span class="mb-1 block text-sm font-medium text-[var(--color-ink)]">{% t 'checkout.detailedAddress' %} *</span>
+        <textarea name="address_line" rows="3" maxlength="255" required autocomplete="street-address" placeholder="{% t 'checkout.detailedAddressHint' %}" class="{{ field }}">{{ guest_form.address_line }}</textarea>
+      </label>
       <textarea name="notes" rows="2" placeholder="{% t 'checkout.notes' %}" class="{{ field }} sm:col-span-2">{{ guest_form.notes }}</textarea>
     </div>
-    <button type="submit" class="{{ primary }} w-full">{% t 'checkout.continueShipping' %}</button>
+    <button type="submit" class="{{ primary }} w-full">{% t 'checkout.continueDelivery' %}</button>
   </form>
 
 {% elif step == "address" %}
   <form class="space-y-4" hx-post="{% url 'storefront:checkout_step' %}" hx-target="#checkout-panel" hx-swap="innerHTML" x-data="{ addr: '{{ order.shipping_address_id|default_if_none:'' }}', showNew: false }">
-    <input type="hidden" name="to" value="shipping"><input type="hidden" name="from" value="address">
+    <input type="hidden" name="to" value="review"><input type="hidden" name="from" value="address">
     <h2 class="font-display text-lg font-semibold">{% t 'checkout.shippingAddress' %}</h2>
     {% if addresses %}
       <div class="space-y-2.5">
@@ -75,44 +85,51 @@ Ports the 4-step flow in pages/Checkout.tsx.
 
     <div x-show="showNew" x-cloak class="space-y-2.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
       <input form="new-addr-form" name="name" placeholder="{% t 'checkout.fullName' %}" class="{{ field }}">
-      <input form="new-addr-form" name="phone" placeholder="{% t 'checkout.phone' %}" class="{{ field }}">
+      <input form="new-addr-form" name="phone" dir="ltr" type="tel" inputmode="tel" autocomplete="tel" placeholder="{% t 'checkout.phone' %}" class="{{ field }}"{% if is_ar %} style="text-align:right"{% endif %}>
       <input form="new-addr-form" name="city" value="Amman" placeholder="{% t 'checkout.city' %}" class="{{ field }}">
-      <input form="new-addr-form" name="address_line" placeholder="{% t 'checkout.streetAddress' %}" class="{{ field }}">
+      <textarea form="new-addr-form" name="address_line" rows="3" maxlength="255" placeholder="{% t 'checkout.detailedAddressHint' %}" class="{{ field }}"></textarea>
       <button type="submit" form="new-addr-form" class="{{ primary }} w-full !bg-[var(--color-ink)] hover:!bg-[var(--color-brand-primary)]">{% t 'checkout.saveAddress' %}</button>
     </div>
     <button type="button" x-show="!showNew" @click="showNew = true" class="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)]"><span class="text-base leading-none">+</span> {% t 'checkout.addAddress' %}</button>
 
-    <button type="submit" class="{{ primary }} w-full" :disabled="!addr">{% t 'checkout.continueShipping' %}</button>
+    <button type="submit" class="{{ primary }} w-full" :disabled="!addr">{% t 'checkout.continueDelivery' %}</button>
   </form>
   <form id="new-addr-form" hx-post="{% url 'storefront:checkout_add_address' %}" hx-target="#checkout-panel" hx-swap="innerHTML"></form>
 
-{% elif step == "shipping" %}
-  <form class="space-y-4" hx-post="{% url 'storefront:checkout_step' %}" hx-target="#checkout-panel" hx-swap="innerHTML" x-data="{ m: '{{ order.shipping_method_id|default_if_none:shipping_methods.0.id }}' }">
-    <input type="hidden" name="to" value="payment"><input type="hidden" name="from" value="shipping">
-    <h2 class="font-display text-lg font-semibold">{% t 'checkout.shippingMethod' %}</h2>
-    <div class="space-y-2.5">
+{% else %}{# step 2 — delivery + payment + place order on one screen #}
+  {# Every change re-posts this form so totals (and the CliQ amount) stay live;
+     "Place order" posts it once more to checkout_confirm. #}
+  <form id="checkout-review-form" class="space-y-6" hx-post="{% url 'storefront:checkout_step' %}" hx-trigger="change" hx-target="#checkout-panel" hx-swap="innerHTML"
+    x-data="{ m: '{{ order.shipping_method_id|default_if_none:'' }}', pm: '{% if order.payment_method == 'cliq' and site_settings.cliq_alias %}cliq{% else %}cod{% endif %}' }">
+    <input type="hidden" name="to" value="review"><input type="hidden" name="from" value="review">
+
+    {% with a=order.shipping_address %}{% if a %}
+    <section class="flex items-start justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 py-3 text-sm">
+      <div class="min-w-0">
+        <p class="text-xs text-[var(--color-ink-subtle)]">{% t 'checkout.deliverTo' %}</p>
+        <p class="mt-0.5 font-medium text-[var(--color-ink)]">{{ a.name }} · <span dir="ltr">{{ a.phone }}</span></p>
+        <p class="text-[var(--color-ink-muted)]">{{ a.address_line }}{% if a.area %}, {{ a.area }}{% endif %}, {{ a.city }}</p>
+      </div>
+      <button type="submit" form="checkout-edit-address" class="-mx-1 shrink-0 p-2 text-sm font-medium text-[var(--color-brand-primary)]">{% t 'checkout.edit' %}</button>
+    </section>
+    {% endif %}{% endwith %}
+
+    <section class="space-y-2.5">
+      <h2 class="font-display text-lg font-semibold">{% t 'checkout.shippingMethod' %}</h2>
       {% for sm in shipping_methods %}
       <label class="flex cursor-pointer items-start gap-3 rounded-[var(--radius-md)] border p-4 text-sm transition-colors" :class="m === '{{ sm.id }}' ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-tint)] ring-1 ring-[var(--color-brand-primary)]' : 'border-[var(--color-border)] hover:border-[var(--color-border-strong)]'">
         <input type="radio" name="shipping_method_id" value="{{ sm.id }}" x-model="m" class="sr-only">
         <span aria-hidden="true" class="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border" :class="m === '{{ sm.id }}' ? 'border-[var(--color-brand-primary)]' : 'border-[var(--color-border-strong)]'"><span x-show="m === '{{ sm.id }}'" class="h-2 w-2 rounded-full bg-[var(--color-brand-primary)]"></span></span>
         <span class="flex min-w-0 flex-1 items-center justify-between gap-3">
-          <span><span class="block font-medium text-[var(--color-ink)]">{{ sm|localized }}</span><span class="block text-[var(--color-ink-muted)]">{{ sm.estimated_days_min }}–{{ sm.estimated_days_max }} {% t 'checkout.days' %}</span></span>
+          <span><span class="block font-medium text-[var(--color-ink)]">{{ sm|localized }}</span><span class="block {% if sm.estimated_days_max == 0 %}font-medium text-[var(--color-success)]{% else %}text-[var(--color-ink-muted)]{% endif %}">{% include "storefront/partials/_delivery_eta.html" %}</span></span>
           <span class="price shrink-0 font-semibold">{{ sm.cost|money }}</span>
         </span>
       </label>
       {% endfor %}
-    </div>
-    <div class="flex gap-3">
-      <button type="submit" onclick="this.form.elements.to.value='address'" class="{{ secondary }} flex-1">{% t 'checkout.back' %}</button>
-      <button type="submit" class="{{ primary }} flex-1" :disabled="!m">{% t 'checkout.continuePayment' %}</button>
-    </div>
-  </form>
+    </section>
 
-{% elif step == "payment" %}
-  <form class="space-y-4" hx-post="{% url 'storefront:checkout_step' %}" hx-target="#checkout-panel" hx-swap="innerHTML" x-data="{ pm: '{% if order.payment_method == 'cliq' and site_settings.cliq_alias %}cliq{% else %}cod{% endif %}' }">
-    <input type="hidden" name="to" value="review"><input type="hidden" name="from" value="payment">
-    <h2 class="font-display text-lg font-semibold">{% t 'checkout.paymentMethod' %}</h2>
-    <div class="space-y-2.5">
+    <section class="space-y-2.5">
+      <h2 class="font-display text-lg font-semibold">{% t 'checkout.paymentMethod' %}</h2>
       <label class="flex cursor-pointer items-start gap-3 rounded-[var(--radius-md)] border p-4 text-sm transition-colors" :class="pm === 'cod' ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-tint)] ring-1 ring-[var(--color-brand-primary)]' : 'border-[var(--color-border)] hover:border-[var(--color-border-strong)]'">
         <input type="radio" name="payment_method" value="cod" x-model="pm" class="sr-only">
         <span aria-hidden="true" class="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border" :class="pm === 'cod' ? 'border-[var(--color-brand-primary)]' : 'border-[var(--color-border-strong)]'"><span x-show="pm === 'cod'" class="h-2 w-2 rounded-full bg-[var(--color-brand-primary)]"></span></span>
@@ -124,36 +141,32 @@ Ports the 4-step flow in pages/Checkout.tsx.
         <span aria-hidden="true" class="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border" :class="pm === 'cliq' ? 'border-[var(--color-brand-primary)]' : 'border-[var(--color-border-strong)]'"><span x-show="pm === 'cliq'" class="h-2 w-2 rounded-full bg-[var(--color-brand-primary)]"></span></span>
         <span class="min-w-0 flex-1"><span class="font-medium text-[var(--color-ink)]">{% t 'checkout.cliq' %}</span><span class="mt-0.5 block text-[var(--color-ink-muted)]">{% t 'checkout.cliqHint' %}</span></span>
       </label>
-      <div x-show="pm === 'cliq'" x-cloak>{% include "storefront/partials/_cliq_details.html" with amount=order.total %}</div>
+      <div x-show="pm === 'cliq'" x-cloak>{% include "storefront/partials/_cliq_details.html" with amount=grand_total %}</div>
       {% endif %}
-    </div>
-    <div class="flex gap-3">
-      <button type="submit" onclick="this.form.elements.to.value='shipping'" class="{{ secondary }} flex-1">{% t 'checkout.back' %}</button>
-      <button type="submit" class="{{ primary }} flex-1">{% t 'checkout.reviewOrder' %}</button>
-    </div>
-  </form>
+    </section>
 
-{% else %}{# review #}
-  <div class="space-y-4">
-    <h2 class="font-display text-lg font-semibold">{% t 'checkout.reviewTitle' %}</h2>
-    <ul class="divide-y divide-[var(--color-border)] rounded-[var(--radius-md)] border border-[var(--color-border)]">
-      {% for item in items %}
-      <li class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-        <span class="min-w-0"><span class="font-medium tabular-nums text-[var(--color-ink-muted)]">{{ item.quantity }}×</span> {{ item.product|localized }}</span>
-        <span class="price shrink-0 font-medium">{{ item.line_total|money }}</span>
-      </li>
-      {% endfor %}
-    </ul>
-    <p class="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
-      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true" class="shrink-0"><rect x="2" y="4" width="12" height="8" rx="1"/><path d="M2 7h12M5 10h2"/></svg>
-      {% t 'checkout.paymentMethod' %}: <span class="font-medium text-[var(--color-ink)]">{% if order.payment_method == 'cliq' %}{% t 'checkout.cliq' %}{% else %}{% t 'checkout.cod' %}{% endif %}</span>
-    </p>
-    {% if order.payment_method == 'cliq' and site_settings.cliq_alias %}{% include "storefront/partials/_cliq_details.html" with amount=order.total %}{% endif %}
-    <div class="flex gap-3">
-      <form hx-post="{% url 'storefront:checkout_step' %}" hx-target="#checkout-panel" hx-swap="innerHTML" class="flex-1"><input type="hidden" name="to" value="payment"><button type="submit" class="{{ secondary }} w-full">{% t 'checkout.back' %}</button></form>
-      <form hx-post="{% url 'storefront:checkout_confirm' %}" class="flex-1"><button type="submit" class="{{ primary }} w-full gap-2 !bg-[var(--color-success)] hover:!opacity-90" hx-disabled-elt="this">{% t 'checkout.placeOrder' %}</button></form>
-    </div>
-  </div>
+    <section class="space-y-3">
+      <h2 class="font-display text-lg font-semibold">{% t 'checkout.orderSummary' %}</h2>
+      <ul class="divide-y divide-[var(--color-border)] rounded-[var(--radius-md)] border border-[var(--color-border)]">
+        {% for item in items %}
+        <li class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+          <span class="min-w-0"><span class="font-medium tabular-nums text-[var(--color-ink-muted)]">{{ item.quantity }}×</span> {{ item.product|localized }}</span>
+          <span class="price shrink-0 font-medium">{{ item.line_total|money }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <dl class="space-y-2 text-sm">
+        <div class="flex justify-between"><dt class="text-[var(--color-ink-muted)]">{% t 'cart.subtotal' %}</dt><dd class="price font-medium">{{ totals.subtotal|money }}</dd></div>
+        {% if totals.discount %}<div class="flex justify-between text-[var(--color-success)]"><dt>{% t 'checkout.discount' %}</dt><dd class="price font-medium">&minus;{{ totals.discount|money }}</dd></div>{% endif %}
+        <div class="flex justify-between"><dt class="text-[var(--color-ink-muted)]">{% t 'checkout.shipping' %}</dt><dd class="price font-medium">{% if shipping_cost != None %}{{ shipping_cost|money }}{% else %}—{% endif %}</dd></div>
+        <div class="flex justify-between border-t border-[var(--color-border)] pt-3 text-base font-semibold"><dt>{% t 'checkout.total' %}</dt><dd class="price text-lg tracking-tight">{{ grand_total|money }}</dd></div>
+      </dl>
+    </section>
+
+    <button type="button" hx-post="{% url 'storefront:checkout_confirm' %}" hx-target="#checkout-panel" hx-swap="innerHTML" hx-disabled-elt="this"
+      class="{{ primary }} h-12 w-full gap-2 !bg-[var(--color-success)] hover:!opacity-90" :disabled="!m">{% t 'checkout.placeOrder' %} · <span class="price">{{ grand_total|money }}</span></button>
+  </form>
+  <form id="checkout-edit-address" hx-post="{% url 'storefront:checkout_step' %}" hx-target="#checkout-panel" hx-swap="innerHTML"><input type="hidden" name="to" value="address"></form>
 {% endif %}
 
 {% endwith %}

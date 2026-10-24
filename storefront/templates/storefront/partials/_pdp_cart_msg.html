@@ -1,5 +1,17 @@
-{% load storefront %}{% comment %}Confirmation line under the PDP add-to-cart form (htmx target #pdp-atc-msg).{% endcomment %}
-<span id="pdp-atc-msg" class="mt-2.5 flex items-center gap-1.5 text-sm text-[var(--color-success)]">
-  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8.5 3.2 3.2L13 5"/></svg>
-  {% t 'product.inCart' %} · <a href="{% url 'storefront:cart' %}" class="font-medium underline">{{ in_cart_qty }}</a>
+{% load storefront %}{% comment %}Confirmation (or stock-limit error) line under the PDP add-to-cart form (htmx target #pdp-atc-msg).{% endcomment %}
+<span id="pdp-atc-msg" class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+  {% if error %}
+  <span role="alert" class="flex items-center gap-1.5 text-[var(--color-sale)]">
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v3.5M8 11h.01"/></svg>
+    {{ error }}
+  </span>
+  {% else %}
+  <span class="flex items-center gap-1.5 text-[var(--color-success)]">
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8.5 3.2 3.2L13 5"/></svg>
+    {% t 'product.inCart' %} ({{ in_cart_qty }})
+  </span>
+  {% endif %}
+  {% if in_cart_qty %}
+  <a href="{% url 'storefront:cart' %}" class="inline-flex items-center gap-1 py-2 font-semibold text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)]">{% t 'cart.viewCart' %} <span aria-hidden="true" class="rtl:-scale-x-100">&rarr;</span></a>
+  {% endif %}
 </span>

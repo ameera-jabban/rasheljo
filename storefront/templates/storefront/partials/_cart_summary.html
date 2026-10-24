@@ -12,11 +12,14 @@
         class="text-xs font-medium text-[var(--color-ink-muted)] underline underline-offset-2 hover:text-[var(--color-sale)]">{% t 'cart.remove' %}</button>
     </div>
   {% else %}
-    <form hx-post="{% url 'storefront:coupon_apply' %}" hx-target="#cart-summary" hx-swap="outerHTML" class="flex gap-2">
-      <input name="code" placeholder="{% t 'cart.coupon' %}" aria-label="{% t 'cart.coupon' %}"
-        class="min-w-0 flex-1 rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-sm uppercase outline-none transition-colors focus:border-[var(--color-brand-primary)] focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15">
+    <div x-data="{ open: {% if coupon_error %}true{% else %}false{% endif %} }">
+    <button type="button" x-show="!open" @click="open = true; $nextTick(() => $refs.code.focus())" class="py-1 text-sm font-medium text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)]">{% t 'cart.haveCoupon' %}</button>
+    <form x-show="open" x-cloak hx-post="{% url 'storefront:coupon_apply' %}" hx-target="#cart-summary" hx-swap="outerHTML" class="flex gap-2">
+      <input x-ref="code" name="code" autocapitalize="characters" autocomplete="off" placeholder="{% t 'cart.coupon' %}" aria-label="{% t 'cart.coupon' %}"
+        class="min-w-0 flex-1 rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-base uppercase outline-none transition-colors focus:border-[var(--color-brand-primary)] focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15">
       <button type="submit" class="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-ink)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--color-brand-primary)]">{% t 'cart.apply' %}</button>
     </form>
+    </div>
   {% endif %}
   {% if coupon_error %}<p class="text-xs text-[var(--color-sale)]">{{ coupon_error }}</p>{% endif %}
 

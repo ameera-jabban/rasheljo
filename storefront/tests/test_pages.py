@@ -247,7 +247,7 @@ class TestCheckout:
         client.get("/en/checkout/")
         r = client.post(reverse("storefront:checkout_step"), {**self.GUEST, "phone": "12345"})
         html = r.content.decode()
-        assert "valid Jordanian mobile" in html and 'value="12 Rainbow St"' in html
+        assert "valid Jordanian mobile" in html and ">12 Rainbow St</textarea>" in html
         assert Order.objects.get().shipping_address_id is None
 
     def test_guest_editing_address_reuses_row(self, client, product):
@@ -385,3 +385,89 @@ class TestPolicy:
 
     def test_unknown_slug_404(self, client):
         assert client.get("/en/policies/made-up/").status_code == 404
+
+
+class TestPurchaseFlowPolish:
+    def test_add_counts_what_is_already_in_cart(self, client, product):
+        product.stock = 2
+        product.save()
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id, "quantity": 2})
+        r = client.post(reverse("storefront:cart_add"), {"product_id": product.id, "quantity": 1})
+        assert CartItem.objects.get().quantity == 2
+        html = r.content.decode()
+        assert 'id="pdp-atc-msg"' in html and "you already have 2" in html
+
+    def test_card_add_over_stock_toasts_limit(self, client, product):
+        product.stock = 1
+        product.save()
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id, "control": "1"})
+        r = client.post(reverse("storefront:cart_add"), {"product_id": product.id, "control": "1"})
+        assert "Only 1 in stock" in r["HX-Trigger"]
+
+    def test_add_success_toast_links_to_cart(self, client, product):
+        r = client.post(reverse("storefront:cart_add"), {"product_id": product.id, "control": "1"})
+        assert '"cart": true' in r["HX-Trigger"]
+
+    def test_garbage_quantity_is_not_a_500(self, client, product):
+        r = client.post(reverse("storefront:cart_add"), {"product_id": product.id, "quantity": "abc"})
+        assert r.status_code == 200 and CartItem.objects.get().quantity == 1
+        item = CartItem.objects.get()
+        r = client.post(reverse("storefront:cart_update", args=[item.id]), {"quantity": "x", "page": "cart"})
+        assert r.status_code == 200
+
+    def test_same_day_shipping_label_and_review_step(self, client, product):
+        from shipping.models import ShippingMethod
+        sm = ShippingMethod.objects.create(name_en="Same-Day", cost="3.00",
+                                           estimated_days_min=0, estimated_days_max=0)
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id})
+        client.get("/en/checkout/")
+        html = client.post(reverse("storefront:checkout_step"), TestCheckout.GUEST).content.decode()
+        assert "Same-day delivery" in html and "0–0" not in html
+        client.post(reverse("storefront:checkout_step"),
+                    {"to": "payment", "from": "shipping", "shipping_method_id": sm.id})
+        html = client.post(reverse("storefront:checkout_step"),
+                           {"to": "review", "from": "payment", "payment_method": "cod"}).content.decode()
+        assert "12 Rainbow St" in html and "Same-day delivery" in html and ">Edit<" in html
+        assert "11.80" in html  # place-order button carries the total (8.80 + 3.00)
+
+    def test_confirm_names_the_out_of_stock_product(self, client, product):
+        from shipping.models import ShippingMethod
+        sm = ShippingMethod.objects.create(name_en="Standard", cost="2.00")
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id})
+        client.get("/en/checkout/")
+        client.post(reverse("storefront:checkout_step"), TestCheckout.GUEST)
+        client.post(reverse("storefront:checkout_step"),
+                    {"to": "review", "from": "shipping", "shipping_method_id": sm.id})
+        product.stock = 0
+        product.save()
+        html = client.post(reverse("storefront:checkout_confirm")).content.decode()
+        assert product.name_en in html and "update your cart" in html
+
+    def test_two_step_checkout(self, client, product):
+        from orders.models import Order
+        from shipping.models import ShippingMethod
+        cheap = ShippingMethod.objects.create(name_en="Standard", cost="2.00")
+        fast = ShippingMethod.objects.create(name_en="Express", cost="5.00")
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id})
+        html = client.get("/en/checkout/").content.decode()
+        assert "Your details" in html and "Delivery &amp; payment" in html
+
+        # step 1 → step 2: cheapest method preselected, totals already include it
+        html = client.post(reverse("storefront:checkout_step"),
+                           {**TestCheckout.GUEST, "to": "review"}).content.decode()
+        order = Order.objects.get()
+        assert order.shipping_method == cheap and "10.80" in html
+        assert 'name="shipping_method_id"' in html and 'name="payment_method"' in html
+
+        # changing the radio re-renders with the new total
+        html = client.post(reverse("storefront:checkout_step"),
+                           {"to": "review", "from": "review", "shipping_method_id": fast.id,
+                            "payment_method": "cod"}).content.decode()
+        assert "13.80" in html
+
+        # "Place order" posts the whole form once more
+        r = client.post(reverse("storefront:checkout_confirm"),
+                        {"to": "review", "from": "review", "shipping_method_id": cheap.id, "payment_method": "cod"})
+        order.refresh_from_db()
+        assert r.status_code == 204 and order.status == "pending"
+        assert order.shipping_method == cheap and str(order.total) == "10.80"

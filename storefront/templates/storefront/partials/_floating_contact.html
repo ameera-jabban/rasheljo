@@ -1,7 +1,7 @@
 {% load storefront %}
 {% comment %}Ports FloatingContactButtons.tsx — persistent WhatsApp + Instagram
 buttons pinned to the bottom corner (start side in RTL).{% endcomment %}
-<div class="fixed bottom-4 z-40 flex flex-col gap-2.5 ltr:right-4 rtl:left-4">
+<div class="fixed bottom-4 z-40 flex flex-col gap-2.5 ltr:right-4 rtl:left-4"{% if cart_count and request.resolver_match.url_name == "cart" %} style="bottom:6rem"{% endif %}>
   <a href="{{ site_settings.whatsapp_url|default:'https://wa.me/962790000000' }}" target="_blank" rel="noopener noreferrer"
     aria-label="{% t 'contact.whatsapp' %}" style="background-color:#25D366"
     class="flex h-11 w-11 items-center justify-center rounded-full text-white shadow-[var(--shadow-md)] transition-transform duration-150 hover:scale-105 active:scale-95">

@@ -9,7 +9,7 @@
   <a href="{% url 'storefront:shop' %}" class="mt-6 inline-flex h-11 items-center rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-brand-primary-hover)]">{% t 'cart.continueShopping' %}</a>
 </div>
 {% else %}
-<div class="mx-auto max-w-5xl px-4 py-10">
+<div class="mx-auto max-w-5xl px-4 py-10" style="padding-bottom:7rem">
   <header class="mb-6 flex items-baseline gap-3">
     <h1 class="font-display text-[1.75rem] font-semibold tracking-tight">{% t 'cart.title' %}</h1>
     <span class="text-sm text-[var(--color-ink-muted)]">{% t 'cart.items' count=totals.item_count %}</span>
@@ -22,6 +22,17 @@
       {% include "storefront/partials/_cart_summary.html" %}
       <a href="{% url 'storefront:shop' %}" class="mt-4 block text-center text-sm font-medium text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)]">{% t 'cart.continueShopping' %}</a>
     </aside>
+  </div>
+</div>
+{# phones: total + checkout always within thumb reach (the summary card sits below every line) #}
+<div class="fixed inset-x-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-4 pt-3 md:hidden"
+  style="bottom:0;padding-bottom:max(0.75rem, env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(0,0,0,.06)">
+  <div class="mx-auto flex max-w-5xl items-center gap-4">
+    <div class="min-w-0">
+      <p class="text-xs text-[var(--color-ink-muted)]">{% t 'cart.total' %}</p>
+      <p class="price text-lg font-semibold tracking-tight">{{ totals.total|money }}</p>
+    </div>
+    <a href="{% url 'storefront:checkout' %}" class="flex h-12 flex-1 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-brand-primary)] text-sm font-semibold text-white shadow-[var(--shadow-sm)] active:bg-[var(--color-brand-primary-hover)]">{% t 'cart.checkout' %}</a>
   </div>
 </div>
 {% endif %}

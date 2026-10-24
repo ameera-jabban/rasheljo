@@ -74,7 +74,11 @@
     "discount": "Discount",
     "total": "Total",
     "each": "each",
-    "secureCheckout": "Secure checkout · cash on delivery available"
+    "secureCheckout": "Secure checkout · cash on delivery available",
+    "viewCart": "View cart",
+    "haveCoupon": "Have a discount code?",
+    "stockLimit": "Only {{count}} left in stock.",
+    "stockLimitInCart": "Only {{count}} in stock — you already have {{inCart}} in your cart."
   },
   "checkout": {
     "title": "Checkout",
@@ -129,7 +133,18 @@
     "cliqHolder": "Beneficiary name",
     "cliqAmount": "Amount to transfer",
     "copy": "Copy",
-    "copied": "Copied"
+    "copied": "Copied",
+    "sameDay": "Same-day delivery",
+    "edit": "Edit",
+    "outOfStock": "Sorry, only {{count}} of “{{name}}” left. Please update your cart and try again.",
+    "detailedAddress": "Detailed address",
+    "detailedAddressHint": "Street, building number, floor/apartment, nearest landmark",
+    "stepDetails": "Your details",
+    "stepDeliveryPayment": "Delivery & payment",
+    "continueDelivery": "Continue to delivery & payment",
+    "deliverTo": "Deliver to",
+    "chooseShipping": "Please choose a delivery option.",
+    "shippingNext": "+ delivery, chosen next"
   },
   "badge": {
     "bestseller": "Bestseller",
