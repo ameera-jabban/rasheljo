@@ -2,6 +2,10 @@
 Status rail + items/totals + delivery address for one placed order. Shared by
 the account order page and the public /order/<token>/ page guests land on.
 {% endcomment %}
+  {% if order.payment_method == 'cliq' and site_settings.cliq_alias and order.status == 'pending' %}
+  {% include "storefront/partials/_cliq_details.html" with amount=order.total %}
+  {% endif %}
+
   {% if order.status != 'cancelled' and status_index >= 0 %}
   <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-xs)]">
     <ol class="flex items-center">

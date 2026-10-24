@@ -67,6 +67,8 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
             "facebook_url",
             "tiktok_url",
             "map_embed_url",
+            "cliq_alias",
+            "cliq_holder_name",
             "map_open_url",
             "copyright_text_en",
             "copyright_text_ar",

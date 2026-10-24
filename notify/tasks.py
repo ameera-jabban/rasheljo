@@ -65,10 +65,19 @@ def _order_recipient(order):
 def send_order_confirmation_email(order_id):
     from orders.models import Order
     order = Order.objects.select_related("user").get(id=order_id)
+    message = f"Thanks for your order! Total: {order.total} JOD."
+    if order.payment_method == "cliq":
+        from content.models import SiteSettings
+
+        settings_row = SiteSettings.load()
+        message += f"\n\nPlease send {order.total} JOD via CliQ to: {settings_row.cliq_alias}"
+        if settings_row.cliq_holder_name:
+            message += f" ({settings_row.cliq_holder_name})"
+        message += "\nWe'll confirm your order once the transfer arrives."
     if recipient := _order_recipient(order):
         send_mail(
             subject=f"Order #{order.id} confirmed",
-            message=f"Thanks for your order! Total: {order.total} JOD.",
+            message=message,
             from_email=None,
             recipient_list=[recipient],
             fail_silently=True,

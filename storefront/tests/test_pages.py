@@ -225,6 +225,22 @@ class TestCheckout:
         page = client.get(r["HX-Redirect"]).content.decode()
         assert f"#{order.id}" in page and "12 Rainbow St" in page
 
+    def test_guest_email_is_optional(self, client, product, mailoutbox):
+        from orders.models import Order
+        from shipping.models import ShippingMethod
+        sm = ShippingMethod.objects.create(name_en="Standard", cost="2.00")
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id})
+        client.get("/en/checkout/")
+        client.post(reverse("storefront:checkout_step"), {**self.GUEST, "email": ""})
+        client.post(reverse("storefront:checkout_step"),
+                    {"to": "payment", "from": "shipping", "shipping_method_id": sm.id})
+        client.post(reverse("storefront:checkout_step"),
+                    {"to": "review", "from": "payment", "payment_method": "cod"})
+        assert client.post(reverse("storefront:checkout_confirm")).status_code == 204
+        order = Order.objects.exclude(status="draft").get()
+        assert order.email == "" and order.shipping_address.phone == "0791234567"
+        assert not mailoutbox  # nowhere to send it — and that's fine
+
     def test_guest_validation_keeps_input(self, client, product):
         from orders.models import Order
         client.post(reverse("storefront:cart_add"), {"product_id": product.id})
@@ -261,6 +277,44 @@ class TestCheckout:
         client.get("/en/checkout/")
         client.post(reverse("storefront:checkout_confirm"))
         assert Order.objects.get().status == "draft"
+
+    def _to_payment_step(self, client, product):
+        from shipping.models import ShippingMethod
+        sm = ShippingMethod.objects.create(name_en="Standard", cost="2.00")
+        client.post(reverse("storefront:cart_add"), {"product_id": product.id})
+        client.get("/en/checkout/")
+        client.post(reverse("storefront:checkout_step"), self.GUEST)
+        return client.post(reverse("storefront:checkout_step"),
+                           {"to": "payment", "from": "shipping", "shipping_method_id": sm.id})
+
+    def test_cliq_hidden_without_alias(self, client, product):
+        from orders.models import Order
+        html = self._to_payment_step(client, product).content.decode()
+        assert 'value="cliq"' not in html
+        client.post(reverse("storefront:checkout_step"),
+                    {"to": "review", "from": "payment", "payment_method": "cliq"})
+        assert Order.objects.get().payment_method == "cod"
+
+    def test_guest_cliq_checkout(self, client, product, mailoutbox):
+        from content.models import SiteSettings
+        from orders.models import Order
+        s = SiteSettings.load()
+        s.cliq_alias, s.cliq_holder_name = "DRRASHELJO", "Dr Rashel Jo LLC"
+        s.save()
+
+        html = self._to_payment_step(client, product).content.decode()
+        assert 'value="cliq"' in html and "DRRASHELJO" in html
+        html = client.post(reverse("storefront:checkout_step"),
+                           {"to": "review", "from": "payment", "payment_method": "cliq"}).content.decode()
+        assert "DRRASHELJO" in html and "Dr Rashel Jo LLC" in html
+        r = client.post(reverse("storefront:checkout_confirm"))
+
+        order = Order.objects.exclude(status="draft").get()
+        assert order.payment_method == "cliq" and order.status == "pending"
+        assert order.payment.status == "pending" and order.payment.provider_reference == "DRRASHELJO"
+        confirmation = next(m for m in mailoutbox if "confirmed" in m.subject)
+        assert "DRRASHELJO" in confirmation.body
+        assert "DRRASHELJO" in client.get(r["HX-Redirect"]).content.decode()
 
     def test_order_status_page_404s_for_unknown_or_draft(self, client, product):
         import uuid

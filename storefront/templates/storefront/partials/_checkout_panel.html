@@ -109,12 +109,23 @@ Ports the 4-step flow in pages/Checkout.tsx.
   </form>
 
 {% elif step == "payment" %}
-  <form class="space-y-4" hx-post="{% url 'storefront:checkout_step' %}" hx-target="#checkout-panel" hx-swap="innerHTML">
-    <input type="hidden" name="to" value="review"><input type="hidden" name="from" value="payment"><input type="hidden" name="payment_method" value="cod">
+  <form class="space-y-4" hx-post="{% url 'storefront:checkout_step' %}" hx-target="#checkout-panel" hx-swap="innerHTML" x-data="{ pm: '{% if order.payment_method == 'cliq' and site_settings.cliq_alias %}cliq{% else %}cod{% endif %}' }">
+    <input type="hidden" name="to" value="review"><input type="hidden" name="from" value="payment">
     <h2 class="font-display text-lg font-semibold">{% t 'checkout.paymentMethod' %}</h2>
-    <div class="flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--color-brand-primary)] bg-[var(--color-brand-tint)] p-4 text-sm">
-      <span aria-hidden="true" class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-primary)] text-white"><svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8.5 3.2 3.2L13 5"/></svg></span>
-      <span class="min-w-0 flex-1"><span class="font-medium text-[var(--color-ink)]">{% t 'checkout.cod' %}</span><span class="mt-0.5 block text-[var(--color-ink-muted)]">{% t 'checkout.codHint' %}</span></span>
+    <div class="space-y-2.5">
+      <label class="flex cursor-pointer items-start gap-3 rounded-[var(--radius-md)] border p-4 text-sm transition-colors" :class="pm === 'cod' ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-tint)] ring-1 ring-[var(--color-brand-primary)]' : 'border-[var(--color-border)] hover:border-[var(--color-border-strong)]'">
+        <input type="radio" name="payment_method" value="cod" x-model="pm" class="sr-only">
+        <span aria-hidden="true" class="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border" :class="pm === 'cod' ? 'border-[var(--color-brand-primary)]' : 'border-[var(--color-border-strong)]'"><span x-show="pm === 'cod'" class="h-2 w-2 rounded-full bg-[var(--color-brand-primary)]"></span></span>
+        <span class="min-w-0 flex-1"><span class="font-medium text-[var(--color-ink)]">{% t 'checkout.cod' %}</span><span class="mt-0.5 block text-[var(--color-ink-muted)]">{% t 'checkout.codHint' %}</span></span>
+      </label>
+      {% if site_settings.cliq_alias %}
+      <label class="flex cursor-pointer items-start gap-3 rounded-[var(--radius-md)] border p-4 text-sm transition-colors" :class="pm === 'cliq' ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-tint)] ring-1 ring-[var(--color-brand-primary)]' : 'border-[var(--color-border)] hover:border-[var(--color-border-strong)]'">
+        <input type="radio" name="payment_method" value="cliq" x-model="pm" class="sr-only">
+        <span aria-hidden="true" class="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border" :class="pm === 'cliq' ? 'border-[var(--color-brand-primary)]' : 'border-[var(--color-border-strong)]'"><span x-show="pm === 'cliq'" class="h-2 w-2 rounded-full bg-[var(--color-brand-primary)]"></span></span>
+        <span class="min-w-0 flex-1"><span class="font-medium text-[var(--color-ink)]">{% t 'checkout.cliq' %}</span><span class="mt-0.5 block text-[var(--color-ink-muted)]">{% t 'checkout.cliqHint' %}</span></span>
+      </label>
+      <div x-show="pm === 'cliq'" x-cloak>{% include "storefront/partials/_cliq_details.html" with amount=order.total %}</div>
+      {% endif %}
     </div>
     <div class="flex gap-3">
       <button type="submit" onclick="this.form.elements.to.value='shipping'" class="{{ secondary }} flex-1">{% t 'checkout.back' %}</button>
@@ -135,8 +146,9 @@ Ports the 4-step flow in pages/Checkout.tsx.
     </ul>
     <p class="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
       <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true" class="shrink-0"><rect x="2" y="4" width="12" height="8" rx="1"/><path d="M2 7h12M5 10h2"/></svg>
-      {% t 'checkout.paymentMethod' %}: <span class="font-medium text-[var(--color-ink)]">{% t 'checkout.cod' %}</span>
+      {% t 'checkout.paymentMethod' %}: <span class="font-medium text-[var(--color-ink)]">{% if order.payment_method == 'cliq' %}{% t 'checkout.cliq' %}{% else %}{% t 'checkout.cod' %}{% endif %}</span>
     </p>
+    {% if order.payment_method == 'cliq' and site_settings.cliq_alias %}{% include "storefront/partials/_cliq_details.html" with amount=order.total %}{% endif %}
     <div class="flex gap-3">
       <form hx-post="{% url 'storefront:checkout_step' %}" hx-target="#checkout-panel" hx-swap="innerHTML" class="flex-1"><input type="hidden" name="to" value="payment"><button type="submit" class="{{ secondary }} w-full">{% t 'checkout.back' %}</button></form>
       <form hx-post="{% url 'storefront:checkout_confirm' %}" class="flex-1"><button type="submit" class="{{ primary }} w-full gap-2 !bg-[var(--color-success)] hover:!opacity-90" hx-disabled-elt="this">{% t 'checkout.placeOrder' %}</button></form>

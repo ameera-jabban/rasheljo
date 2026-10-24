@@ -17,7 +17,7 @@ class Order(models.Model):
         ("delivered", "Delivered"),
         ("cancelled", "Cancelled"),
     ]
-    PAYMENT_METHODS = [("cod", "Cash on Delivery"), ("card", "Card")]
+    PAYMENT_METHODS = [("cod", "Cash on Delivery"), ("card", "Card"), ("cliq", "CliQ transfer")]
 
     # null for guest checkout — the guest's contact details live on
     # shipping_address + email instead.

@@ -644,8 +644,9 @@ def checkout_step(request):
             error = translate("checkout.genericError")
         else:
             order.shipping_method = m
-    if request.POST.get("payment_method") in ("cod", "card"):
-        order.payment_method = request.POST["payment_method"]
+    method = request.POST.get("payment_method")
+    if method == "cod" or (method == "cliq" and services.get_site_settings().cliq_alias):
+        order.payment_method = method
 
     if error:
         # stay on the current step

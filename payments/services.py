@@ -66,6 +66,27 @@ class CashOnDeliveryProvider(PaymentProvider):
         return PaymentInitiationResult(True, "cancelled")
 
 
+class CliQProvider(PaymentProvider):
+    """Manual CliQ bank transfer to the store's alias (SiteSettings.cliq_alias).
+    There's no API to poll, so the payment stays pending until an admin sees the
+    transfer land and marks it paid."""
+
+    def initiate(self, payment, idempotency_key):
+        from content.models import SiteSettings
+
+        alias = SiteSettings.load().cliq_alias
+        return PaymentInitiationResult(
+            True, "pending", provider_reference=alias,
+            raw_response={"note": "Awaiting CliQ transfer — verify manually.", "cliq_alias": alias},
+        )
+
+    def confirm(self, payment):
+        return PaymentInitiationResult(True, "paid")
+
+    def cancel(self, payment):
+        return PaymentInitiationResult(True, "cancelled")
+
+
 class CardGatewayProvider(PaymentProvider):
     """Real implementation requires PAYMENT_GATEWAY_API_KEY and
     PAYMENT_GATEWAY_WEBHOOK_SECRET to be set — until then every method
@@ -106,7 +127,7 @@ class CardGatewayProvider(PaymentProvider):
 
 
 def get_provider(method: str) -> PaymentProvider:
-    return {"cod": CashOnDeliveryProvider(), "card": CardGatewayProvider()}[method]
+    return {"cod": CashOnDeliveryProvider(), "card": CardGatewayProvider(), "cliq": CliQProvider()}[method]
 
 
 @transaction.atomic

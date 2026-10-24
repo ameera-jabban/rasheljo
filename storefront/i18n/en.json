@@ -121,7 +121,15 @@
     "invalidPhone": "Please enter a valid Jordanian mobile number (07XXXXXXXX).",
     "invalidEmail": "Please enter a valid email address.",
     "orderPlaced": "Thank you! Your order has been placed.",
-    "orderPlacedHint": "We'll call you to confirm delivery. Bookmark this page to track your order."
+    "orderPlacedHint": "We'll call you to confirm delivery. Bookmark this page to track your order.",
+    "cliq": "CliQ transfer",
+    "cliqHint": "Transfer the total instantly from your banking app.",
+    "cliqInstructions": "Send the order total via CliQ to the alias below. We'll confirm your order once the transfer arrives.",
+    "cliqAlias": "CliQ alias",
+    "cliqHolder": "Beneficiary name",
+    "cliqAmount": "Amount to transfer",
+    "copy": "Copy",
+    "copied": "Copied"
   },
   "badge": {
     "bestseller": "Bestseller",

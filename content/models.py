@@ -68,6 +68,15 @@ class SiteSettings(models.Model):
     )
     copyright_text_ar = models.CharField(max_length=300, blank=True)
 
+    cliq_alias = models.CharField(
+        max_length=60, blank=True,
+        help_text="CliQ alias customers transfer to. Leave blank to hide the CliQ payment option at checkout.",
+    )
+    cliq_holder_name = models.CharField(
+        max_length=120, blank=True,
+        help_text="Beneficiary name customers should see in their banking app (optional).",
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
