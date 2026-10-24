@@ -69,11 +69,6 @@ LOGGING = {
     },
 }
 
-# --- Static/media in production: whitenoise serves static; media should be
-# swapped to S3/GCS-backed storage for a real deployment — flagged explicitly
-# rather than left on local disk, which doesn't survive container restarts. ---
-if env("MEDIA_STORAGE_BACKEND", default="") == "s3":
-    STORAGES["default"] = {"BACKEND": "storages.backends.s3.S3Storage"}
-    AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
-    AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", default="")
-    AWS_DEFAULT_ACL = None
+# --- Static/media in production: whitenoise serves static; media goes to
+# Cloudflare R2 via MEDIA_STORAGE_BACKEND=s3 — configured in config/settings.py
+# so it applies whichever settings module the host runs. ---

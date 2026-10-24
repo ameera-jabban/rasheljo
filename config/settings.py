@@ -9,6 +9,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -141,6 +142,32 @@ STORAGES = {
 }
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Uploaded media on Cloudflare R2 (S3 API). Render's disk is wiped on every
+# deploy/restart, so admin uploads can't live in MEDIA_ROOT there. The options
+# are built whenever a bucket is configured so `upload_media_to_r2` can copy
+# MEDIA_ROOT up *before* MEDIA_STORAGE_BACKEND=s3 switches the site over.
+MEDIA_S3_OPTIONS = None
+if env("AWS_STORAGE_BUCKET_NAME", default=""):
+    MEDIA_S3_OPTIONS = {
+        "bucket_name": env("AWS_STORAGE_BUCKET_NAME"),
+        "endpoint_url": env("AWS_S3_ENDPOINT_URL", default="") or None,
+        "region_name": env("AWS_S3_REGION_NAME", default="") or None,
+        "access_key": env("AWS_ACCESS_KEY_ID"),
+        "secret_key": env("AWS_SECRET_ACCESS_KEY"),
+        # Public URLs come from the bucket's custom domain (or its r2.dev URL);
+        # the raw endpoint is private, so this one is required.
+        "custom_domain": env("AWS_S3_CUSTOM_DOMAIN"),
+        "default_acl": None,
+        "querystring_auth": False,
+        "file_overwrite": False,  # a re-uploaded "logo.png" gets a new name, so long caching is safe
+        "signature_version": "s3v4",
+        "object_parameters": {"CacheControl": "public, max-age=31536000, immutable"},
+    }
+if env("MEDIA_STORAGE_BACKEND", default="") == "s3":
+    if MEDIA_S3_OPTIONS is None:
+        raise ImproperlyConfigured("MEDIA_STORAGE_BACKEND=s3 needs AWS_STORAGE_BUCKET_NAME and the other AWS_* vars.")
+    STORAGES["default"] = {"BACKEND": "storages.backends.s3.S3Storage", "OPTIONS": MEDIA_S3_OPTIONS}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
