@@ -458,6 +458,7 @@ class TestPurchaseFlowPolish:
         order = Order.objects.get()
         assert order.shipping_method == cheap and "10.80" in html
         assert 'name="shipping_method_id"' in html and 'name="payment_method"' in html
+        assert "{#" not in html and "re-posts this form" not in html  # no template comments leaking
 
         # changing the radio re-renders with the new total
         html = client.post(reverse("storefront:checkout_step"),
@@ -471,3 +472,17 @@ class TestPurchaseFlowPolish:
         order.refresh_from_db()
         assert r.status_code == 204 and order.status == "pending"
         assert order.shipping_method == cheap and str(order.total) == "10.80"
+
+
+def test_no_multiline_hash_comments_in_templates():
+    """Django's {# #} only works on one line — a wrapped one renders as page text."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "templates"
+    bad = [
+        f"{path.relative_to(root)}:{n}"
+        for path in root.rglob("*.html")
+        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+        if "{#" in line and "#}" not in line[line.index("{#"):]
+    ]
+    assert not bad, f"use {{% comment %}} for multi-line comments: {bad}"

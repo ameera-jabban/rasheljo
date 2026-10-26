@@ -97,8 +97,8 @@ Ports the 4-step flow in pages/Checkout.tsx.
   <form id="new-addr-form" hx-post="{% url 'storefront:checkout_add_address' %}" hx-target="#checkout-panel" hx-swap="innerHTML"></form>
 
 {% else %}{# step 2 — delivery + payment + place order on one screen #}
-  {# Every change re-posts this form so totals (and the CliQ amount) stay live;
-     "Place order" posts it once more to checkout_confirm. #}
+  {% comment %}Every change re-posts this form so totals (and the CliQ amount) stay live;
+  "Place order" posts it once more to checkout_confirm.{% endcomment %}
   <form id="checkout-review-form" class="space-y-6" hx-post="{% url 'storefront:checkout_step' %}" hx-trigger="change" hx-target="#checkout-panel" hx-swap="innerHTML"
     x-data="{ m: '{{ order.shipping_method_id|default_if_none:'' }}', pm: '{% if order.payment_method == 'cliq' and site_settings.cliq_alias %}cliq{% else %}cod{% endif %}' }">
     <input type="hidden" name="to" value="review"><input type="hidden" name="from" value="review">
